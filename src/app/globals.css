@@ -1,0 +1,205 @@
+@import 'tailwindcss';
+
+/* Self-hosted variable fonts from npm (Fontsource) rather than next/font/google:
+   the font files land in the lockfile, so the build has no third-party network
+   dependency and no visitor ever contacts Google. All three are variable, so the
+   whole weight range is one file per subset. latin-ext is required — the
+   catalogue is full of Turkish, Spanish and Portuguese diacritics. */
+@import '@fontsource-variable/bricolage-grotesque/wght.css';
+@import '@fontsource-variable/instrument-sans/wght.css';
+@import '@fontsource-variable/instrument-sans/wght-italic.css';
+@import '@fontsource-variable/quicksand/wght.css';
+
+/**
+ * Feelyrics design tokens.
+ *
+ * The palette is the brand kit: a verdigris-night ground, bone type, amber for
+ * anything the reader acts on, and one reserved green that only ever marks the
+ * moment a feeling landed — a suggestion accepted, a request ready. Keeping that
+ * green scarce is what makes it mean something.
+ *
+ * The interface is dark by design rather than by preference: it is a screen you
+ * read lyrics on with a song playing. Every pairing below was checked against
+ * WCAG AA — bone on ground clears 14:1, amber on ground 8.6:1, and the dimmest
+ * olive is only ever used for text at or above 14px semibold.
+ */
+@theme {
+  --color-ground: #0b1511;
+  --color-ground-raised: #101a15;
+  --color-panel: #0d1411;
+  --color-elevated: #16211b;
+
+  --color-bone: #eaefe4;
+  --color-bone-muted: #b9c4b4;
+  --color-olive: #9b9b70;
+  --color-patina: #8fb2a2;
+
+  --color-amber: #e5a943;
+  --color-amber-soft: #2a2015;
+  --color-amber-ink: #1a1105;
+
+  --color-feel: #b7c56b;
+  --color-feel-soft: #1d2414;
+
+  --color-line: #22302a;
+  --color-line-strong: #33453c;
+
+  --color-danger: #e0785e;
+  --color-danger-soft: #2a1713;
+
+  /* Variable families, self-hosted. The fallbacks carry the first paint while
+     the woff2 loads, and `font-display: swap` means text is never invisible. */
+  --font-display: 'Bricolage Grotesque Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'Instrument Sans Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-brand: 'Quicksand Variable', ui-rounded, ui-sans-serif, system-ui, sans-serif;
+
+  --radius-card: 14px;
+  --radius-pill: 999px;
+
+  --shadow-sheet: 0 -18px 50px rgb(0 0 0 / 0.5);
+  --shadow-float: 0 12px 40px rgb(0 0 0 / 0.45);
+
+  --animate-fade-in: fade-in 160ms ease-out;
+  --animate-slide-up: slide-up 220ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@layer base {
+  :root {
+    color-scheme: dark;
+    /* The chrome the OS draws — scrollbars, form controls — follows the brand. */
+    accent-color: var(--color-amber);
+  }
+
+  * {
+    min-width: 0;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    scrollbar-gutter: stable;
+  }
+
+  body {
+    background-color: var(--color-ground);
+    color: var(--color-bone);
+    font-family: var(--font-sans);
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /**
+   * One focus treatment everywhere, and it is never removed — only replaced with
+   * something at least as visible. Keyboard users are the reason this exists and
+   * the reason it is amber against a dark ground rather than a hairline.
+   */
+  :focus-visible {
+    outline: 2px solid var(--color-amber);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  ::selection {
+    background-color: var(--color-feel);
+    color: var(--color-ground);
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    font-weight: 800;
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  /**
+   * Motion is decorative here — nothing in the app communicates through movement
+   * alone — so it can be switched off wholesale for anyone who asks.
+   */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+  /**
+   * Windows High Contrast Mode strips colour, so anything that carried meaning
+   * through colour alone needs a border to survive.
+   */
+  @media (forced-colors: active) {
+    .fl-chip,
+    .fl-card,
+    .fl-button {
+      border: 1px solid currentColor;
+    }
+  }
+}
+
+@layer components {
+  /** Visually hidden, still read aloud. */
+  .sr-only-focusable:not(:focus):not(:focus-within) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border-width: 0;
+  }
+
+  .fl-surface {
+    background-color: var(--color-panel);
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-card);
+  }
+
+  /** Subtle concrete grain — the texture from the brand references. */
+  .fl-grain {
+    position: relative;
+    isolation: isolate;
+  }
+
+  .fl-grain::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    opacity: 0.045;
+    pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+}
