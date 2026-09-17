@@ -120,6 +120,7 @@ export function AdminDashboard({
               <RequestCard
                 key={request.id}
                 request={request}
+                songs={songs}
                 onDone={(message) => {
                   notify(message, 'success');
                   router.refresh();
@@ -217,9 +218,11 @@ function SuggestionCard({
 
 function RequestCard({
   request,
+  songs,
   onDone,
 }: {
   request: RequestView;
+  songs: readonly EditorSongOption[];
   onDone: (message: string) => void;
 }) {
   const t = useTranslations('admin');
@@ -234,6 +237,20 @@ function RequestCard({
   // Only a request that brought words can become a song: the rest of the site
   // depends on never translating a lyric nobody handed us.
   const canOpen = request.status === 'queued' && !request.songSlug;
+
+  /**
+   * The song this request points at, if the slug names one at all.
+   *
+   * "Mark ready" is the step that throws the pasted lyrics away, so it stays
+   * shut until the song it closes actually has a translated body. The server
+   * refuses the same move anyway; this is so the refusal is visible before the
+   * click rather than as an error afterwards.
+   */
+  const target = React.useMemo(
+    () => songs.find((song) => song.slug === slug.trim()) ?? null,
+    [songs, slug],
+  );
+  const readyBlocked = !target || target.lineCount === 0;
 
   function openSongs() {
     setError(null);
@@ -280,7 +297,10 @@ function RequestCard({
       </div>
 
       {request.requesterNote ? (
-        <p className="text-[13px] italic leading-relaxed text-patina">
+        <p
+          lang={request.requesterNoteLanguage ?? undefined}
+          className="text-[13px] italic leading-relaxed text-patina"
+        >
           “{request.requesterNote}”
         </p>
       ) : null}
@@ -334,6 +354,9 @@ function RequestCard({
           onChange={(event) => setSlug(event.target.value)}
           placeholder="artist-title-es-tr"
         />
+        {slug.trim().length > 0 && readyBlocked ? (
+          <FieldHint>{t('markReadyBlocked')}</FieldHint>
+        ) : null}
       </Field>
 
       <div className="flex flex-wrap gap-2">
@@ -344,7 +367,7 @@ function RequestCard({
           variant="primary"
           size="sm"
           loading={pending}
-          disabled={slug.trim().length === 0}
+          disabled={slug.trim().length === 0 || readyBlocked}
           onClick={() => move('ready')}
         >
           {t('markReady')}

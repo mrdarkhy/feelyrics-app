@@ -335,7 +335,7 @@
     "editorDraftDiscard": "Start from the stored version",
     "editorPasteLabel": "Paste the lyrics",
     "editorPastePlaceholder": "[Verse]\nOriginal line {separator} the rendering\nAnother line {separator} its rendering",
-    "editorPasteHint": "One line per line. Put the rendering after a {separator} and it lands in the right box — the lyric alone works too, then you type the renderings below. Section markers like [Verse] or [Chorus] are recognised in five languages; without them, blank lines do the grouping. Nothing is stored until you save.",
+    "editorPasteHint": "One line per line. After the first {separator} put the rendering, after the second the note, after the third the reason tags separated by commas — every field is optional, so a bare lyric still works and you type the rest below. Section markers like [Verse] or [Chorus] are recognised in five languages; without them, blank lines do the grouping. Nothing is stored until you save.",
     "editorExtract": "Read the paste",
     "editorExtracted": "{lines, plural, one {# line} other {# lines}} found",
     "editorPaired": "{count} came with a rendering",
@@ -360,7 +360,9 @@
     "requestOpenAction": "Open the song files",
     "requestOpened": "{count, plural, one {# song opened} other {# songs opened}}. Finish them in the Lyrics tab.",
     "editorPasteFromRequest": "The asker’s paste is in the box.",
-    "editorSavedAndClosed": "Saved — {lines, plural, one {# line} other {# lines}}. The request is marked ready and the asker’s words are deleted."
+    "editorSavedAndClosed": "Saved — {lines, plural, one {# line} other {# lines}}. The request is marked ready and the asker’s words are deleted.",
+    "markReadyBlocked": "No body yet. Translate it in the Lyrics desk first; marking ready deletes the lyrics this request arrived with.",
+    "editorAnnotated": "{count} came with a note or tags"
   },
   "errors": {
     "title": "Something went wrong",
@@ -380,7 +382,8 @@
       "missing_reason_tag": "Pick at least one reason.",
       "invalid_transition": "That change is not possible from here.",
       "quote_limit_exceeded": "That would quote more of the song than is allowed.",
-      "share_payload_invalid": "That link could not be read."
+      "share_payload_invalid": "That link could not be read.",
+      "song_not_translated": "That song has no translated lines yet. Paste and save its body in the Lyrics desk first — marking the request ready deletes the words it came with."
     }
   },
   "common": {

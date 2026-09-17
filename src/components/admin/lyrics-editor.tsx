@@ -189,6 +189,9 @@ export function LyricsEditor({ songs }: { songs: readonly EditorSongOption[] }) 
       if (result.data.paired > 0) {
         parts.push(t('editorPaired', { count: result.data.paired }));
       }
+      if (result.data.annotated > 0) {
+        parts.push(t('editorAnnotated', { count: result.data.annotated }));
+      }
       if (result.data.carried > 0) {
         parts.push(t('editorCarried', { count: result.data.carried }));
       }

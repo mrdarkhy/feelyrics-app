@@ -17,6 +17,8 @@ export interface SubmitRequestInput {
   requesterAlias?: string | null;
   /** One line on why this song — shown on the queue beside the request. */
   requesterNote?: string | null;
+  /** The interface language the note was typed in. */
+  requesterNoteLanguage?: string | null;
   /**
    * Pasted lyrics.
    *
@@ -60,6 +62,7 @@ export async function submitRequestAction(
     targets: input.targets,
     requesterAlias: input.requesterAlias,
     requesterNote: input.requesterNote,
+    requesterNoteLanguage: input.requesterNoteLanguage,
     hasLyrics: lineCount > 0,
     lyricLineCount: lineCount > 0 ? lineCount : null,
     pastedLyrics: pasted.length > 0 ? pasted : null,
@@ -93,7 +96,39 @@ export async function updateRequestStatusAction(
     return { ok: false, code: 'forbidden' };
   }
 
-  const result = await updateRequestStatus(getContainer(), { id, status, songSlug });
+  const container = getContainer();
+
+  /**
+   * Marking a request ready is what discards the lyrics it arrived with — the
+   * promise the form makes to whoever pasted them. That is only an honest trade
+   * once the song those words were meant for actually has a body: otherwise the
+   * button destroys the one copy of the lyrics and leaves an empty song behind.
+   *
+   * So the check is here, before the transition, and not only in the button's
+   * `disabled` attribute. A disabled button is a courtesy to the person using
+   * the page; this is the rule.
+   */
+  if (status === 'ready') {
+    const slug = songSlug?.trim() ?? '';
+    if (slug.length === 0) {
+      return { ok: false, code: 'invalid_input', field: 'songSlug' };
+    }
+
+    const song = await container.songs.findFullBySlug(slug);
+    if (!song) {
+      return { ok: false, code: 'not_found', field: 'songSlug' };
+    }
+
+    const lineCount = song.sections.reduce(
+      (total, section) => total + section.lines.length,
+      0,
+    );
+    if (lineCount === 0) {
+      return { ok: false, code: 'song_not_translated', field: 'songSlug' };
+    }
+  }
+
+  const result = await updateRequestStatus(container, { id, status, songSlug });
 
   if (!result.ok) {
     return { ok: false, code: result.error.code, field: result.error.field };

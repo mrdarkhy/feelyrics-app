@@ -50,6 +50,7 @@ export type DomainErrorCode =
   | 'empty_lyrics'
   | 'missing_reason_tag'
   | 'invalid_transition'
+  | 'song_not_translated'
   | 'quote_limit_exceeded'
   | 'share_payload_invalid';
 

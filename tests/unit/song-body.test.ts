@@ -216,4 +216,42 @@ describe('splitPairedPaste', () => {
     expect(result.lyrics).toBe('a line\nanother line');
     expect(result.renderings.size).toBe(0);
   });
+
+  it('lifts the note and the reason tags out of the later fields', () => {
+    const result = splitPairedPaste(
+      'a line | the rendering | why it reads this way | register, feel',
+    );
+
+    const key = lineKey('a line');
+    expect(result.lyrics).toBe('a line');
+    expect(result.renderings.get(key)).toBe('the rendering');
+    expect(result.notes.get(key)).toBe('why it reads this way');
+    expect(result.tags.get(key)).toEqual(['register', 'feel']);
+  });
+
+  it('treats every field after the lyric as optional', () => {
+    const result = splitPairedPaste(
+      ['first | rendering only', 'second | rendering | a note'].join('\n'),
+    );
+
+    expect(result.notes.has(lineKey('first'))).toBe(false);
+    expect(result.tags.has(lineKey('first'))).toBe(false);
+    expect(result.notes.get(lineKey('second'))).toBe('a note');
+    expect(result.tags.has(lineKey('second'))).toBe(false);
+  });
+
+  it('drops a misspelled tag without costing the line its other work', () => {
+    const result = splitPairedPaste('a line | rendering | note | regsiter, feel');
+
+    const key = lineKey('a line');
+    expect(result.tags.get(key)).toEqual(['feel']);
+    expect(result.renderings.get(key)).toBe('rendering');
+    expect(result.notes.get(key)).toBe('note');
+  });
+
+  it('accepts a note that itself has no tags after it', () => {
+    const result = splitPairedPaste('a line | rendering | note |');
+    expect(result.notes.get(lineKey('a line'))).toBe('note');
+    expect(result.tags.size).toBe(0);
+  });
 });

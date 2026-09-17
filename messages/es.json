@@ -335,7 +335,7 @@
     "editorDraftDiscard": "Empezar desde lo guardado",
     "editorPasteLabel": "Pega la letra",
     "editorPastePlaceholder": "[Estribillo]\nVerso original {separator} su versión\nOtro verso {separator} su versión",
-    "editorPasteHint": "Un verso por línea. Escribe la versión después de un {separator} y cae en su casilla — también vale pegar solo la letra y escribir las versiones abajo. Las marcas como [Estribillo] se reconocen en cinco idiomas; sin ellas, las líneas en blanco agrupan. Nada se guarda hasta que pulses guardar.",
+    "editorPasteHint": "Una línea por línea. Tras el primer {separator} va la versión, tras el segundo la nota, tras el tercero las etiquetas de motivo separadas por comas — todos los campos son opcionales, así que una letra sola también funciona y el resto lo escribes abajo. Los marcadores de sección como [Verse] o [Estribillo] se reconocen en cinco idiomas; sin ellos, las líneas en blanco hacen la agrupación. Nada se guarda hasta que pulses guardar.",
     "editorExtract": "Leer lo pegado",
     "editorExtracted": "{lines, plural, one {# verso} other {# versos}} encontrados",
     "editorPaired": "{count} llegaron con su versión",
@@ -360,7 +360,9 @@
     "requestOpenAction": "Abrir las fichas",
     "requestOpened": "{count, plural, one {# canción abierta} other {# canciones abiertas}}. Termínalas en la pestaña Letras.",
     "editorPasteFromRequest": "La letra que pegaron ya está en la caja.",
-    "editorSavedAndClosed": "Guardado — {lines, plural, one {# verso} other {# versos}}. La petición queda lista y la letra que pegaron se borra."
+    "editorSavedAndClosed": "Guardado — {lines, plural, one {# verso} other {# versos}}. La petición queda lista y la letra que pegaron se borra.",
+    "markReadyBlocked": "Todavía sin cuerpo. Tradúcela primero en la mesa de Letras; marcarla como lista borra la letra que llegó con esta petición.",
+    "editorAnnotated": "{count} traían nota o etiquetas"
   },
   "errors": {
     "title": "Algo ha salido mal",
@@ -380,7 +382,8 @@
       "missing_reason_tag": "Elige al menos una razón.",
       "invalid_transition": "Ese cambio no es posible desde aquí.",
       "quote_limit_exceeded": "Eso citaría más canción de la permitida.",
-      "share_payload_invalid": "No se pudo leer ese enlace."
+      "share_payload_invalid": "No se pudo leer ese enlace.",
+      "song_not_translated": "Esa canción todavía no tiene versos traducidos. Pega y guarda su cuerpo en la mesa de Letras primero: marcar la petición como lista borra las palabras que la acompañaban."
     }
   },
   "common": {

@@ -335,7 +335,7 @@
     "editorDraftDiscard": "Kayıtlı hâlden başla",
     "editorPasteLabel": "Sözleri yapıştır",
     "editorPastePlaceholder": "[Nakarat]\nOrijinal satır {separator} oturtması\nBaşka bir satır {separator} onun oturtması",
-    "editorPasteHint": "Her satır bir satır. Oturtmayı {separator} işaretinden sonra yazarsan doğrudan kutusuna düşer — yalnız sözleri yapıştırmak da olur, oturtmaları aşağıdan yazarsın. [Nakarat], [Verse] gibi bölüm işaretleri beş dilde tanınıyor; yoksa boş satırlar gruplar. Sen kaydedene kadar hiçbir şey saklanmıyor.",
+    "editorPasteHint": "Her satır bir satır. İlk {separator} işaretinden sonra oturtma, ikincisinden sonra not, üçüncüsünden sonra virgülle ayrılmış gerekçe etiketleri yazılır — hepsi isteğe bağlı, yalnız sözleri yapıştırmak da olur, gerisini aşağıdan yazarsın. [Nakarat], [Verse] gibi bölüm işaretleri beş dilde tanınıyor; yoksa boş satırlar gruplar. Sen kaydedene kadar hiçbir şey saklanmıyor.",
     "editorExtract": "Yapıştırılanı oku",
     "editorExtracted": "{lines, plural, other {# satır}} bulundu",
     "editorPaired": "{count} tanesi oturtmasıyla geldi",
@@ -360,7 +360,9 @@
     "requestOpenAction": "Şarkı dosyalarını aç",
     "requestOpened": "{count, plural, other {# şarkı}} açıldı. Sözler sekmesinden tamamla.",
     "editorPasteFromRequest": "İsteyenin yapıştırdığı sözler kutuda.",
-    "editorSavedAndClosed": "Kaydedildi — {lines, plural, other {# satır}}. İstek hazır olarak işaretlendi ve isteyenin sözleri silindi."
+    "editorSavedAndClosed": "Kaydedildi — {lines, plural, other {# satır}}. İstek hazır olarak işaretlendi ve isteyenin sözleri silindi.",
+    "markReadyBlocked": "Gövde henüz yok. Önce Sözler masasında çevir; hazır işaretlemek bu istekle gelen sözleri siler.",
+    "editorAnnotated": "{count} tanesi notuyla ve etiketiyle geldi"
   },
   "errors": {
     "title": "Bir şeyler ters gitti",
@@ -380,7 +382,8 @@
       "missing_reason_tag": "En az bir gerekçe seç.",
       "invalid_transition": "Bu değişiklik buradan mümkün değil.",
       "quote_limit_exceeded": "Bu, şarkıdan izin verilenden fazlasını alıntılar.",
-      "share_payload_invalid": "Bu link okunamadı."
+      "share_payload_invalid": "Bu link okunamadı.",
+      "song_not_translated": "Bu şarkının henüz çevrilmiş satırı yok. Önce Sözler masasında gövdesini yapıştırıp kaydet — isteği hazır işaretlemek, onunla gelen sözleri siler."
     }
   },
   "common": {

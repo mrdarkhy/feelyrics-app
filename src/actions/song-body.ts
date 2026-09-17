@@ -102,6 +102,8 @@ export interface ExtractedBodyResult {
   carried: number;
   /** Lines whose rendering arrived in the paste itself, after a `|`. */
   paired: number;
+  /** Lines whose note or reason tags arrived in the paste too. */
+  annotated: number;
   /** Lines the extractor threw out as lyric-site furniture. */
   discarded: string[];
   /** True when blank lines, not markers, did the grouping. */
@@ -129,13 +131,20 @@ export async function extractBodyAction(
   if (!song.ok) return { ok: false, code: song.error.code, field: song.error.field };
 
   let paired = 0;
+  let annotated = 0;
 
   const draft: DraftSection[] = extracted.value.sections.map((section, index) => ({
     label: section.label ?? `${index + 1}`,
     lines: section.lines.map((line) => {
-      const rendering = paste.renderings.get(lineKey(line.text)) ?? '';
+      const key = lineKey(line.text);
+      const rendering = paste.renderings.get(key) ?? '';
+      const note = paste.notes.get(key) ?? null;
+      const tags = paste.tags.get(key) ?? [];
+
       if (rendering.length > 0) paired += 1;
-      return { original: line.text, rendering, note: null, tags: [] };
+      if (note !== null || tags.length > 0) annotated += 1;
+
+      return { original: line.text, rendering, note, tags: [...tags] };
     }),
   }));
 
@@ -148,6 +157,7 @@ export async function extractBodyAction(
       sections: toEditorSections(sections),
       carried,
       paired,
+      annotated,
       discarded: [...extracted.value.discardedLines],
       inferredStructure: extracted.value.inferredStructure,
     },
