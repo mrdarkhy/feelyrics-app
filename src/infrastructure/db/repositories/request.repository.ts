@@ -30,6 +30,7 @@ function toDomain(row: SongRequestRow): SongRequest {
     requesterNote: row.requesterNote,
     hasLyrics: row.hasLyrics,
     lyricLineCount: row.lyricLineCount,
+    pastedLyrics: row.pastedLyrics,
     status: row.status,
     songSlug: row.songSlug,
     createdAt: row.createdAt,
@@ -60,6 +61,17 @@ export class DrizzleRequestRepository implements RequestRepository {
     return rows.map(toDomain);
   }
 
+  async findBySongSlug(slug: string): Promise<SongRequest | null> {
+    const [row] = await this.db
+      .select()
+      .from(songRequests)
+      .where(eq(songRequests.songSlug, slug))
+      .orderBy(desc(songRequests.createdAt))
+      .limit(1);
+
+    return row ? toDomain(row) : null;
+  }
+
   async findById(id: string): Promise<SongRequest | null> {
     const [row] = await this.db
       .select()
@@ -80,6 +92,7 @@ export class DrizzleRequestRepository implements RequestRepository {
         requesterNote: input.requesterNote,
         hasLyrics: input.hasLyrics,
         lyricLineCount: input.lyricLineCount,
+        pastedLyrics: input.pastedLyrics,
         status: input.status,
         dedupeKey: dedupeKey(input.title, input.artist),
       })
@@ -97,6 +110,7 @@ export class DrizzleRequestRepository implements RequestRepository {
         songSlug: request.songSlug,
         hasLyrics: request.hasLyrics,
         lyricLineCount: request.lyricLineCount,
+        pastedLyrics: request.pastedLyrics,
         requesterAlias: request.requesterAlias,
         requesterNote: request.requesterNote,
         updatedAt: new Date(),

@@ -65,7 +65,10 @@ export function RequestQueue({ requests }: { requests: readonly RequestView[] })
                   “{request.requesterNote}”
                 </p>
               ) : null}
-              {request.lyricLineCount ? (
+              {/* Only while the words are still doing something. Once the song
+                  is published the count is history, and "Ready · 2 lines ready"
+                  reads like two different states. */}
+              {request.lyricLineCount && request.status !== 'ready' ? (
                 <p className="text-[12px] font-semibold text-olive">
                   {t('linesReady', { count: request.lyricLineCount })}
                 </p>

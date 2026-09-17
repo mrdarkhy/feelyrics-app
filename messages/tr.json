@@ -140,7 +140,7 @@
     "backToLibrary": "Kütüphaneye dön",
     "pairLabel": "Çeviri yönü",
     "engineLabel": "Motor",
-    "feelProfile": "His profili",
+    "feelProfile": "His",
     "notesToggle": "Notlar",
     "notesOn": "Notları gizle",
     "notesOff": "Notları göster",
@@ -153,7 +153,7 @@
     "sectionLabel": "Bölüm",
     "excerptNotice": "Bu sayfada {total} satırın {shown} tanesi var. Sözler telifli; bu yüzden herkese açık sayfalar en az alıntıyı yapar, gerisi yalnız kişisel linkte yolculuk eder.",
     "publicDomainNotice": "Bu sözler kamu malı, dolayısıyla şarkının tamamı burada durabilir.",
-    "shareButton": "Paylaş",
+    "shareButton": "Şarkının tamamını oku",
     "suggestButton": "Satır öner",
     "cardButton": "Kart üret",
     "noLines": "Bu şarkının henüz satırı yok."
@@ -165,8 +165,8 @@
     "lineOf": "{total} satırdan {position}."
   },
   "share": {
-    "title": "Bu şarkıyı paylaş",
-    "body": "Aşağıdaki linki kopyala. Açan kişi aynı şarkıyı bu sitede görür — sözler linkin # kısmında taşınır ve hiçbir sunucuya değmez.",
+    "title": "Şarkının tamamı bu linkte",
+    "body": "Aç ve bütün satırları oku, ya da linki birine yolla. Sözler #’ten sonraki kısmın içinde taşınıyor — tarayıcılar orayı hiçbir zaman sunucuya göndermez, yani şarkı senin cihazından karşı tarafın cihazına gidiyor, bizim hiçbir sunucumuza uğramadan.",
     "copy": "Linki kopyala",
     "copied": "Kopyalandı.",
     "copyFailed": "Otomatik kopyalanamadı. Metni seçip elle kopyala.",
@@ -179,7 +179,8 @@
     "pastePlaceholder": "#f1.eNq…",
     "pasteSubmit": "Aç",
     "pasteInvalid": "Bu link okunamadı. Tamamının kopyalandığından emin ol.",
-    "unavailable": "Bu şarkı tam hâliyle paylaşılamaz."
+    "unavailable": "Bu şarkı tam hâliyle paylaşılamaz.",
+    "open": "Aç"
   },
   "shared": {
     "title": "Seninle paylaşıldı",
@@ -226,7 +227,7 @@
     "aliasPlaceholder": "Kuyrukta ve şarkıda görünür",
     "lyricsLabel": "Sözler",
     "lyricsPlaceholder": "Sözleri buraya yapıştır — bir nakarat başlamak için yeter",
-    "lyricsPrivacy": "Sözler şarkının yapısını çıkarmak için kullanılır ve sonra atılır. Yapıştırdığın hiçbir şey bu sitede saklanmıyor.",
+    "lyricsPrivacy": "Sözler şarkının yapısını çıkarmak için kullanılır ve yalnızca şarkın çevrilene kadar tutulur — sonra silinir. Sitede hiçbir yerde gösterilmez.",
     "submit": "Kuyruğa ekle",
     "submitting": "Ekleniyor…",
     "success": "Eklendi. İsteğin aşağıdaki kuyrukta.",
@@ -264,7 +265,7 @@
     "submitHintWithoutLyrics": "{count, plural, =0 {Şu an söz bekleyen yok.} other {# şarkı söz bekliyor.}} Sözsüz gönderirsen seninki de bekler.",
     "doneTitle": "Girdi.",
     "doneDuplicateTitle": "Bunu zaten isteyen olmuş — sen de üstündesin.",
-    "doneWithLyrics": "{count, plural, other {# satır}} geldi ve şarkı kuyrukta. Sözlerin kendisi çoktan silindi.",
+    "doneWithLyrics": "{count, plural, other {# satır}} geldi ve şarkı kuyrukta. Sözler yalnızca çevrilene kadar duruyor.",
     "doneWithoutLyrics": "Listeye girdi, sözleri getirecek birini bekliyor. İstediğin zaman sen yapıştırırsan öne geçer.",
     "doneNext": {
       "one": "Her satırın bir birebir okuması, bir de söylenme sırasına göre okuması yapılır; hissi koruyan kazanır.",
@@ -352,7 +353,14 @@
     "editorSaving": "Kaydediliyor…",
     "editorSaved": "Kaydedildi — {lines, plural, other {# satır}}, öncesi {before}.",
     "editorBlocked": "{count, plural, other {# satırın}} hâlâ oturtması yok.",
-    "editorReady": "Her satırın oturtması var."
+    "editorReady": "Her satırın oturtması var.",
+    "requestOpenHint": "Bu isteğin dosyalarını aç: her hedef dil için bir tane ({targets}). İsteyenin yapıştırdığı sözler Sözler sekmesinde hazır bekliyor.",
+    "requestSourceLabel": "Şarkının dili",
+    "requestSourcePlaceholder": "Dili seç",
+    "requestOpenAction": "Şarkı dosyalarını aç",
+    "requestOpened": "{count, plural, other {# şarkı}} açıldı. Sözler sekmesinden tamamla.",
+    "editorPasteFromRequest": "İsteyenin yapıştırdığı sözler kutuda.",
+    "editorSavedAndClosed": "Kaydedildi — {lines, plural, other {# satır}}. İstek hazır olarak işaretlendi ve isteyenin sözleri silindi."
   },
   "errors": {
     "title": "Bir şeyler ters gitti",

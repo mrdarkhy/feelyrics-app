@@ -4,6 +4,7 @@ import {
   submitRequest,
   type RequestsPort,
 } from '@/application/use-cases/requests';
+import { transition } from '@/domain/request/song-request';
 import type { SongRequest, ValidatedRequest } from '@/domain/request/song-request';
 import { isErr, isOk } from '@/domain/shared/result';
 
@@ -26,6 +27,7 @@ function fakeRequest(input: ValidatedRequest, id: string): SongRequest {
     requesterNote: input.requesterNote,
     hasLyrics: input.hasLyrics,
     lyricLineCount: input.lyricLineCount,
+    pastedLyrics: input.pastedLyrics,
     status: input.status,
     songSlug: null,
     createdAt: new Date('2026-09-01T00:00:00Z'),
@@ -54,6 +56,7 @@ function makeDeps(options: { duplicate?: SongRequest } = {}) {
     requests: {
       list: async () => [],
       findById: async () => null,
+      findBySongSlug: async () => null,
       create: async (input) => {
         const row = fakeRequest(input, `req-${created.length + 1}`);
         created.push(row);
@@ -158,6 +161,36 @@ describe('submitRequest', () => {
     }
   });
 
+  it('keeps the paste only while the request is open', async () => {
+    const { deps, created } = makeDeps();
+
+    await submitRequest(deps, { ...VALID, pastedLyrics: 'first line\nsecond line' });
+    const row = created[0];
+    if (!row) throw new Error('expected a row');
+    expect(row.pastedLyrics).toBe('first line\nsecond line');
+
+    // Marking it ready is what clears the words — the promise the form makes.
+    const done = transition(row, 'ready', 'some-song-tr-en');
+    expect(isOk(done)).toBe(true);
+    if (isOk(done)) expect(done.value.pastedLyrics).toBeNull();
+
+    const declined = transition(row, 'declined');
+    expect(isOk(declined)).toBe(true);
+    if (isOk(declined)) expect(declined.value.pastedLyrics).toBeNull();
+  });
+
+  it('will not hold a paste for a request that came without lyrics', async () => {
+    const { deps, created } = makeDeps();
+
+    await submitRequest(deps, {
+      ...VALID,
+      hasLyrics: false,
+      pastedLyrics: 'words nobody confirmed',
+    });
+
+    expect(created[0]?.pastedLyrics).toBeNull();
+  });
+
   it('folds a second ask for the same song into the existing row', async () => {
     const existing = fakeRequest(
       {
@@ -168,6 +201,7 @@ describe('submitRequest', () => {
         requesterNote: null,
         hasLyrics: false,
         lyricLineCount: null,
+        pastedLyrics: null,
         status: 'lyrics-needed',
       },
       'req-existing',

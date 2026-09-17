@@ -15,6 +15,13 @@
       "when": 1789655174681,
       "tag": "0001_yellow_sleepwalker",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1789657529099,
+      "tag": "0002_steep_the_professor",
+      "breakpoints": true
     }
   ]
 }

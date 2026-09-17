@@ -1,8 +1,8 @@
 {
   "brand": {
     "name": "feelyrics",
-    "tagline": "la misma música. una historia más honda.",
-    "slogan": "La misma música. Una historia más honda.",
+    "tagline": "la misma música. una historia más profunda.",
+    "slogan": "La misma música. Una historia más profunda.",
     "principle": "sentimiento > significado > palabras"
   },
   "meta": {
@@ -80,7 +80,7 @@
   },
   "home": {
     "heroTitle": "Escúchala. Entiéndela. Siéntela.",
-    "heroBody": "Una canción en un idioma que no hablas te llega al oído y ahí se queda. Feelyrics traduce el sentimiento en lugar de las palabras, y enseña cómo lo hace: cada verso lleva una nota que explica por qué quedó así.",
+    "heroBody": "Una canción en un idioma que no hablas te llega al oído y ahí se queda. Feelyrics traduce el sentimiento en lugar de las palabras, y enseña cómo: cada verso lleva una nota que explica por qué quedó así.",
     "browse": "Ver la biblioteca",
     "requestCta": "Trae una canción",
     "statsSongs": "{count, plural, =0 {Todavía no hay canciones} one {# canción} other {# canciones}}",
@@ -90,7 +90,7 @@
     "howSteps": {
       "oneTitle": "Alguien pega la letra",
       "oneBody": "No se extrae nada de ningún sitio. Una canción entra en la cola cuando una persona trae sus palabras.",
-      "twoTitle": "El motor propone, una persona lo asienta",
+      "twoTitle": "El motor propone, una persona lo remata",
       "twoBody": "Cada verso pasa por la prueba de lo literal y por la del orden cantado, y luego recibe una etiqueta que dice por qué ganó la opción elegida.",
       "threeTitle": "Los hablantes nativos lo corrigen",
       "threeBody": "Cualquiera puede proponer un verso mejor. Las correcciones aceptadas cambian lo que verá quien lea después."
@@ -119,7 +119,7 @@
     "openSong": "Abrir {title}",
     "excerptBadge": "Extracto",
     "fullBadge": "Texto completo",
-    "validatedBadge": "Verificada",
+    "validatedBadge": "Repasada",
     "requestedByBadge": "Pedida",
     "sortLabel": "Ordenar",
     "sort": {
@@ -129,8 +129,8 @@
     },
     "resultCount": "{count, plural, =0 {Sin canciones} one {# canción} other {# canciones}}",
     "filterQuery": "«{query}»",
-    "filterInto": "Al: {language}",
-    "filterFrom": "Desde: {language}",
+    "filterInto": "A {language}",
+    "filterFrom": "De {language}",
     "removeFilter": "Quitar el filtro: {label}",
     "clearAll": "Limpiar todo",
     "railLabel": "Lista de canciones",
@@ -140,7 +140,7 @@
     "backToLibrary": "Volver a la biblioteca",
     "pairLabel": "Dirección de la traducción",
     "engineLabel": "Motor",
-    "feelProfile": "Perfil de sentimiento",
+    "feelProfile": "El sentimiento",
     "notesToggle": "Notas",
     "notesOn": "Ocultar las notas",
     "notesOff": "Ver las notas",
@@ -148,12 +148,12 @@
     "translationFirst": "Traducción primero",
     "originalFirst": "Original primero",
     "requestedBy": "Pedida por {name}",
-    "validatedBy": "Verificada por {name}",
+    "validatedBy": "Repasada por {name}",
     "lineNoteLabel": "Por qué este verso dice esto",
     "sectionLabel": "Sección",
     "excerptNotice": "Esta página muestra {shown} de {total} versos. Las letras tienen derechos de autor, así que las páginas públicas citan lo mínimo y el resto solo viaja dentro de un enlace personal.",
     "publicDomainNotice": "Esta letra es de dominio público, así que la canción entera puede vivir aquí.",
-    "shareButton": "Compartir",
+    "shareButton": "Leer la canción entera",
     "suggestButton": "Proponer un verso",
     "cardButton": "Crear una tarjeta",
     "noLines": "Esta canción todavía no tiene versos."
@@ -165,8 +165,8 @@
     "lineOf": "Verso {position} de {total}"
   },
   "share": {
-    "title": "Comparte esta canción",
-    "body": "Copia el enlace. Quien lo abra verá la misma canción en este sitio: las palabras viajan dentro de la parte del enlace que va tras el # y no tocan ningún servidor.",
+    "title": "La canción entera está en este enlace",
+    "body": "Ábrelo para leer todos los versos, o mándaselo a alguien. La letra viaja dentro de la parte que va después del # — eso los navegadores no lo mandan nunca, así que la canción va de tu móvil al suyo sin pasar por ningún servidor nuestro.",
     "copy": "Copiar el enlace",
     "copied": "Copiado.",
     "copyFailed": "No se pudo copiar automáticamente. Selecciona el texto y cópialo a mano.",
@@ -179,7 +179,8 @@
     "pastePlaceholder": "#f1.eNq…",
     "pasteSubmit": "Abrir",
     "pasteInvalid": "No se pudo leer ese enlace. Comprueba que se copió entero.",
-    "unavailable": "Esta canción no se puede compartir entera."
+    "unavailable": "Esta canción no se puede compartir entera.",
+    "open": "Abrirlo"
   },
   "shared": {
     "title": "Compartida contigo",
@@ -214,7 +215,7 @@
   },
   "requests": {
     "title": "Cola de peticiones",
-    "subtitle": "Pide una canción y mira cómo cae. El nombre que dejes se queda en la traducción.",
+    "subtitle": "Pide una canción y mira cómo queda. El nombre que dejes se queda en la traducción.",
     "formTitle": "Trae una canción",
     "titleLabel": "Título de la canción",
     "titlePlaceholder": "La canción que quieres sentir",
@@ -226,15 +227,15 @@
     "aliasPlaceholder": "Se ve en la cola y en la canción",
     "lyricsLabel": "La letra",
     "lyricsPlaceholder": "Pega la letra aquí — con un estribillo basta para empezar",
-    "lyricsPrivacy": "La letra sirve para deducir la forma de la canción y después se descarta. Nada de lo que pegues se guarda en este sitio.",
+    "lyricsPrivacy": "La letra sirve para deducir la forma de la canción y se guarda solo hasta que tu canción esté traducida — después se borra. Nunca se muestra en el sitio.",
     "submit": "Añadir a la cola",
     "submitting": "Añadiendo…",
     "success": "Añadida. Tu petición está en la cola de abajo.",
     "successDuplicate": "Alguien ya la había pedido: tu petición se ha sumado a la suya.",
     "queueTitle": "En la cola",
-    "empty": "La cola está vacía. Sé quien pida la primera.",
+    "empty": "La cola está vacía. Sé el primero en pedir una.",
     "for": "para {name}",
-    "into": "al {languages}",
+    "into": "a {languages}",
     "openResult": "Abrir la traducción terminada",
     "weeklyCount": "{count, plural, =0 {Ninguna petición esta semana} one {# petición esta semana} other {# peticiones esta semana}}",
     "status": {
@@ -256,20 +257,20 @@
     "structureSections": "{count, plural, one {# sección} other {# secciones}}",
     "structureRepeats": "{count, plural, one {# bloque repetido} other {# bloques repetidos}}",
     "structureDropped": "{count, plural, one {# verso descartado por ser ruido} other {# versos descartados por ser ruido}}",
-    "structureInferred": "No hay marcas de sección, así que agruparon las líneas en blanco. Añade [Estribillo] o [Verse] si la forma no cuadra.",
+    "structureInferred": "No hay marcas de sección, así que las líneas en blanco hicieron los grupos. Añade [Estribillo] o [Verse] si la forma no cuadra.",
     "noteLabel": "Por qué esta canción",
-    "noteHint": "Una línea. Se ve en la cola y cambia de verdad la traducción — «mi abuela la cantaba» dice cómo debe caer la primera estrofa.",
-    "notePlaceholder": "Qué te hace esta canción",
+    "noteHint": "Una línea. Se ve en la cola y cambia de verdad la traducción — «mi abuela la cantaba» dice cómo tiene que sonar la primera estrofa.",
+    "notePlaceholder": "Qué te hace sentir esta canción",
     "submitHintWithLyrics": "Llega con letra, así que entra directa a la cola.",
     "submitHintWithoutLyrics": "{count, plural, =0 {Ahora mismo nada espera letra.} one {# canción espera letra.} other {# canciones esperan letra.}} Sin letra, la tuya también espera.",
     "doneTitle": "Ya está dentro.",
     "doneDuplicateTitle": "Alguien ya la pidió — tú también estás.",
-    "doneWithLyrics": "Llegaron {count, plural, one {# verso} other {# versos}} y la canción está en la cola. La letra en sí ya se borró.",
+    "doneWithLyrics": "Llegaron {count, plural, one {# verso} other {# versos}} y la canción está en la cola. La letra se queda solo hasta que esté traducida.",
     "doneWithoutLyrics": "Está en la lista, esperando a que alguien traiga la letra. Pégala tú cuando quieras y pasa al principio.",
     "doneNext": {
       "one": "Cada verso recibe una lectura literal y otra en el orden en que se canta; gana la que conserva el sentimiento.",
       "two": "El verso ganador lleva una nota que explica por qué ganó. Esa nota es todo el asunto.",
-      "three": "Cuando quede, tu nombre se queda con ella — y su fila de abajo se pone verde."
+      "three": "Cuando esté lista, tu nombre sigue con ella — y su fila de abajo se pone verde."
     },
     "doneAnother": "Traer otra canción",
     "linesReady": "{count, plural, one {# verso listo} other {# versos listos}}",
@@ -352,7 +353,14 @@
     "editorSaving": "Guardando…",
     "editorSaved": "Guardado — {lines, plural, one {# verso} other {# versos}}, antes {before}.",
     "editorBlocked": "{count, plural, one {# verso sigue sin versión} other {# versos siguen sin versión}}.",
-    "editorReady": "Todos los versos tienen versión."
+    "editorReady": "Todos los versos tienen versión.",
+    "requestOpenHint": "Abre las fichas que pide esta petición: una por idioma de destino ({targets}). La letra que pegaron te espera en la pestaña Letras.",
+    "requestSourceLabel": "Cantada en",
+    "requestSourcePlaceholder": "Elige el idioma",
+    "requestOpenAction": "Abrir las fichas",
+    "requestOpened": "{count, plural, one {# canción abierta} other {# canciones abiertas}}. Termínalas en la pestaña Letras.",
+    "editorPasteFromRequest": "La letra que pegaron ya está en la caja.",
+    "editorSavedAndClosed": "Guardado — {lines, plural, one {# verso} other {# versos}}. La petición queda lista y la letra que pegaron se borra."
   },
   "errors": {
     "title": "Algo ha salido mal",

@@ -10,6 +10,10 @@ import type { RequestStatus } from '@/domain/request/song-request';
 import { reviewSuggestionAction } from '@/actions/suggestions';
 import { updateRequestStatusAction } from '@/actions/requests';
 import { signOutAction } from '@/actions/admin';
+import { createSongsFromRequestAction } from '@/actions/song-body';
+import { LANGUAGE_CODES } from '@/domain/shared/language';
+import { LyricsEditor } from './lyrics-editor';
+import type { EditorSongOption } from './lyrics-editor';
 import { Button } from '@/components/ui/button';
 import { Chip } from '@/components/ui/chip';
 import { Field, FieldInput, FieldLabel, FieldHint } from '@/components/ui/field';
@@ -45,9 +49,11 @@ const TAB_CLASSES = cn(
 export function AdminDashboard({
   suggestions,
   requests,
+  songs,
 }: {
   suggestions: readonly SuggestionView[];
   requests: readonly RequestView[];
+  songs: readonly EditorSongOption[];
 }) {
   const t = useTranslations('admin');
   const router = useRouter();
@@ -80,7 +86,14 @@ export function AdminDashboard({
           <TabsPrimitive.Trigger value="requests" className={TAB_CLASSES}>
             {t('requestsTab')} ({requests.length})
           </TabsPrimitive.Trigger>
+          <TabsPrimitive.Trigger value="lyrics" className={TAB_CLASSES}>
+            {t('lyricsTab')}
+          </TabsPrimitive.Trigger>
         </TabsPrimitive.List>
+
+        <TabsPrimitive.Content value="lyrics" className="focus:outline-none">
+          <LyricsEditor songs={songs} />
+        </TabsPrimitive.Content>
 
         <TabsPrimitive.Content value="suggestions" className="space-y-3 focus:outline-none">
           {suggestions.length === 0 ? (
@@ -212,9 +225,33 @@ function RequestCard({
   const t = useTranslations('admin');
   const tRequests = useTranslations('requests');
   const tErrors = useTranslations('errors.codes');
+  const tLang = useTranslations('languages');
   const [slug, setSlug] = React.useState(request.songSlug ?? '');
+  const [source, setSource] = React.useState('');
   const [error, setError] = React.useState<string | null>(null);
   const [pending, startTransition] = React.useTransition();
+
+  // Only a request that brought words can become a song: the rest of the site
+  // depends on never translating a lyric nobody handed us.
+  const canOpen = request.status === 'queued' && !request.songSlug;
+
+  function openSongs() {
+    setError(null);
+    startTransition(async () => {
+      const result = await createSongsFromRequestAction(request.id, source);
+      if (!result.ok) {
+        setError(tErrors(result.code));
+        return;
+      }
+      const first = result.data.created[0] ?? result.data.existing[0];
+      if (first) setSlug(first);
+      onDone(
+        t('requestOpened', {
+          count: result.data.created.length + result.data.existing.length,
+        }),
+      );
+    });
+  }
 
   function move(status: RequestStatus) {
     setError(null);
@@ -241,6 +278,54 @@ function RequestCard({
         </div>
         <Chip tone="neutral">{tRequests(`status.${request.status}`)}</Chip>
       </div>
+
+      {request.requesterNote ? (
+        <p className="text-[13px] italic leading-relaxed text-patina">
+          “{request.requesterNote}”
+        </p>
+      ) : null}
+
+      {canOpen ? (
+        <div className="space-y-2 rounded-xl border border-line bg-ground-raised p-3">
+          <p className="text-[13px] leading-relaxed text-bone-muted">
+            {t('requestOpenHint', {
+              targets: request.targets.map((code) => tLang(code)).join(' + '),
+            })}
+          </p>
+          <div className="flex flex-wrap items-end gap-2">
+            <div className="flex flex-col gap-1">
+              <label
+                htmlFor={`source-${request.id}`}
+                className="text-[11px] font-semibold uppercase tracking-widest text-olive"
+              >
+                {t('requestSourceLabel')}
+              </label>
+              <select
+                id={`source-${request.id}`}
+                value={source}
+                onChange={(event) => setSource(event.target.value)}
+                className="rounded-lg border border-line bg-panel px-2.5 py-1.5 text-[13px] text-bone focus:border-amber/60 focus:outline-none"
+              >
+                <option value="">{t('requestSourcePlaceholder')}</option>
+                {LANGUAGE_CODES.map((code) => (
+                  <option key={code} value={code}>
+                    {tLang(code)}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <Button
+              variant="primary"
+              size="sm"
+              loading={pending}
+              disabled={source.length === 0}
+              onClick={openSongs}
+            >
+              {t('requestOpenAction')}
+            </Button>
+          </div>
+        </div>
+      ) : null}
 
       <Field error={error}>
         <FieldLabel>{t('songSlugLabel')}</FieldLabel>

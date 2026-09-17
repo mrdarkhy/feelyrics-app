@@ -155,6 +155,7 @@ describe('song requests', () => {
       requesterNote: null,
       hasLyrics: true,
       lyricLineCount: null,
+      pastedLyrics: null,
       status: 'queued',
       songSlug: null,
       createdAt: new Date(),

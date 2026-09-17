@@ -236,9 +236,13 @@ test.describe('requests', () => {
    * within an hour fails on the quota rather than on a defect, and points at the
    * wrong thing when it does. The limit itself is asserted below, deliberately.
    */
-  test.beforeEach(async ({ context }, testInfo) => {
+  test.beforeEach(async ({ context }) => {
+    // A fresh identity per test. Deliberately not built from the test's title:
+    // the server reads the first comma-separated entry of this header, the way a
+    // proxy chain writes it, so a title containing a comma would be truncated to
+    // a value that repeats across runs — which is how this went wrong once.
     await context.setExtraHTTPHeaders({
-      'x-forwarded-for': `e2e-${testInfo.project.name}-${testInfo.title}-${Date.now()}`,
+      'x-forwarded-for': `e2e-${Math.random().toString(36).slice(2)}-${Date.now()}`,
     });
   });
 
@@ -316,6 +320,74 @@ test.describe('requests', () => {
     await expect(page.locator('form').getByRole('alert')).toContainText(/language/i);
   });
 
+  test('a request becomes a song, and the asker gets their words back out', async ({
+    page,
+  }, testInfo) => {
+    test.skip(testInfo.project.name !== 'desktop', 'one writer at a time');
+    test.skip(ADMIN_TOKEN.length === 0, 'needs ADMIN_TOKEN in the environment');
+
+    const unique = `Loop Song ${Date.now()}`;
+    const marker = `marker ${Date.now()}`;
+
+    // 1. Somebody asks, and brings the words.
+    await page.goto('/en/requests');
+    await page.getByLabel(/^the lyrics/i).fill(`[Verse]\n${marker}\nsecond line`);
+    await page.getByLabel('Song title').fill(unique);
+    await page.getByLabel('Artist').fill('Loopers');
+    await page
+      .getByRole('group', { name: /translate it into/i })
+      .getByRole('button', { name: 'Turkish', exact: true })
+      .click();
+    await page.getByRole('button', { name: /add to the queue/i }).click();
+    await expect(page.getByRole('heading', { name: /it is in/i })).toBeVisible({
+      timeout: 15_000,
+    });
+
+    // 2. The maintainer opens the song files the request asked for.
+    await page.goto('/en/admin');
+    await page.getByLabel(/maintainer token/i).fill(ADMIN_TOKEN);
+    await page.getByRole('button', { name: /^sign in$/i }).click();
+    await page.getByRole('tab', { name: /requests/i }).click();
+
+    const card = page.locator('article').filter({ hasText: unique }).first();
+    await card.getByLabel(/sung in/i).selectOption('en');
+    await card.getByRole('button', { name: /open the song files/i }).click();
+    // The toast is mirrored into a live region for screen readers, so scope the
+    // match to the visible one rather than matching both copies.
+    await expect(page.getByText(/song opened/i).first()).toBeVisible({ timeout: 15_000 });
+
+    // 3. The editor opens on that song with the asker's paste already in it.
+    await page.getByRole('tab', { name: /lyrics/i }).click();
+    const option = `${unique} — Loopers · 0`;
+    await page.getByLabel(/which song/i).selectOption({ label: option });
+    await expect(page.getByLabel(/paste the lyrics/i)).toHaveValue(new RegExp(marker), {
+      timeout: 15_000,
+    });
+
+    // 4. Translating it and saving closes the request.
+    await page
+      .getByLabel(/paste the lyrics/i)
+      .fill(`[Verse]\n${marker} | rendered one\nsecond line | rendered two`);
+    await page.getByRole('button', { name: /read the paste/i }).click();
+    await page.getByRole('button', { name: /^save 2 lines$/i }).click();
+    await expect(page.getByText(/request is marked ready/i).first()).toBeVisible({
+      timeout: 15_000,
+    });
+
+    // 5. The asker's words are gone: the editor no longer has them to offer.
+    await page.reload();
+    await page.getByRole('tab', { name: /lyrics/i }).click();
+    await page.getByLabel(/which song/i).selectOption({ label: `${unique} — Loopers · 2` });
+    await expect(page.getByLabel(/paste the lyrics/i)).toHaveValue('', {
+      timeout: 15_000,
+    });
+
+    // And the queue row is green and points at the song.
+    await page.goto('/en/requests');
+    const row = page.locator('li').filter({ hasText: unique }).first();
+    await expect(row.getByText('Ready', { exact: true })).toBeVisible();
+  });
+
   // The rate limit itself is covered in tests/unit/requests.test.ts. Driving six
   // submissions through the form to prove a counting rule tested the browser's
   // patience rather than the rule.
@@ -324,13 +396,20 @@ test.describe('requests', () => {
 test.describe('sharing', () => {
   test('a share link carries the whole song in its fragment', async ({ page }) => {
     await page.goto('/en/songs/tarkan-simarik-tr-en');
-    await page.getByRole('button', { name: 'Share' }).click();
+    await page.getByRole('button', { name: /read the whole song/i }).click();
 
     const dialog = page.getByRole('dialog');
     await expect(dialog).toBeVisible();
 
     const link = await dialog.getByLabel(/share link/i).inputValue();
     expect(link).toContain('#f1.');
+
+    // Opening it is the primary action now — "Share" was read as "post this
+    // somewhere", and nobody found the rest of the song behind it.
+    await expect(dialog.getByRole('link', { name: /open it/i })).toHaveAttribute(
+      'href',
+      link,
+    );
     // The full body must be big enough that it is plainly not two lines.
     expect(link.length).toBeGreaterThan(1_000);
 
@@ -486,7 +565,7 @@ test.describe('the lyrics editor', () => {
     await expect(page.getByText(/This page shows 2 of 4 lines/)).toBeVisible();
 
     // And the whole thing travels in the link, which is the point of saving it.
-    await page.getByRole('button', { name: 'Share' }).click();
+    await page.getByRole('button', { name: /read the whole song/i }).click();
     const link = await page.getByRole('dialog').getByLabel(/share link/i).inputValue();
     await page.goto(new URL(link).pathname + new URL(link).hash);
     await expect(page.getByText(marker)).toBeVisible();

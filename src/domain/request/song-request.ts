@@ -59,6 +59,16 @@ export interface SongRequest {
    * the site holding a single one of them.
    */
   readonly lyricLineCount: number | null;
+  /**
+   * The words the asker pasted, kept only while the request is open.
+   *
+   * Without this the queue is a dead end: the request says "87 lines ready" and
+   * the person who has to translate them has never seen one. The words are
+   * cleared the moment the request reaches `ready` or `declined` — see
+   * {@link transition} — so the site holds a pending request's lyric and
+   * nothing else, and the form says exactly that.
+   */
+  readonly pastedLyrics: string | null;
   readonly status: RequestStatus;
   /** Set once the translation is published. */
   readonly songSlug: string | null;
@@ -109,10 +119,16 @@ export function transition(
     );
   }
 
+  // A finished request has no further use for the words, so this is where they
+  // go. Clearing on the transition rather than on a schedule means the promise
+  // holds without anything having to run.
+  const settled = to === 'ready' || to === 'declined';
+
   return ok({
     ...request,
     status: to,
     songSlug: songSlug === undefined ? request.songSlug : songSlug,
+    pastedLyrics: settled ? null : request.pastedLyrics,
     updatedAt: new Date(),
   });
 }
@@ -131,6 +147,7 @@ export interface NewRequestInput {
   readonly requesterNote?: string | null;
   readonly hasLyrics?: boolean;
   readonly lyricLineCount?: number | null;
+  readonly pastedLyrics?: string | null;
 }
 
 export interface ValidatedRequest {
@@ -141,6 +158,7 @@ export interface ValidatedRequest {
   readonly requesterNote: string | null;
   readonly hasLyrics: boolean;
   readonly lyricLineCount: number | null;
+  readonly pastedLyrics: string | null;
   readonly status: RequestStatus;
 }
 
@@ -195,6 +213,8 @@ export function validateNewRequest(
       ? Math.floor(rawCount)
       : null;
 
+  const pasted = input.pastedLyrics?.trim() ?? '';
+
   return ok({
     title,
     artist,
@@ -203,6 +223,8 @@ export function validateNewRequest(
     requesterNote: note.length > 0 ? note.slice(0, MAX_REQUESTER_NOTE_LENGTH) : null,
     hasLyrics,
     lyricLineCount,
+    // Only a request that actually arrived with words keeps any.
+    pastedLyrics: hasLyrics && pasted.length > 0 ? pasted : null,
     status: hasLyrics ? 'queued' : 'lyrics-needed',
   });
 }

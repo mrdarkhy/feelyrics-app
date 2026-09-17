@@ -117,8 +117,15 @@ export const songRequests = pgTable(
     /** One line from the asker on why this song. */
     requesterNote: text('requester_note'),
     hasLyrics: boolean('has_lyrics').notNull().default(false),
-    /** How many lines the paste held. The count only — never the lyric. */
+    /** How many lines the paste held. */
     lyricLineCount: integer('lyric_line_count'),
+    /**
+     * The asker's paste, held only while the request is open and cleared when it
+     * is fulfilled or declined. A translated song's body lives in `lines`; this
+     * column exists so the person doing the translating has something to work
+     * from in between.
+     */
+    pastedLyrics: text('pasted_lyrics'),
     status: requestStatusEnum('status').notNull().default('lyrics-needed'),
     /** Points at the published song once the request is fulfilled. */
     songSlug: text('song_slug'),

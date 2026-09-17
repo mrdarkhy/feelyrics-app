@@ -3,11 +3,13 @@ import type { Database } from '../client';
 import { lines, sections, songs } from '../schema';
 import type { LineRow, SectionRow, SongRow } from '../schema';
 import type {
+  NewSong,
   SongFilter,
   SongRepository,
   SongSummary,
 } from '@/application/ports/repositories';
 import type { Line, Section, Song } from '@/domain/song/song';
+import type { ValidatedSection } from '@/domain/song/body';
 
 /**
  * Drizzle-backed song storage.
@@ -118,6 +120,79 @@ export class DrizzleSongRepository implements SongRepository {
       .update(lines)
       .set({ rendering, updatedAt: new Date() })
       .where(eq(lines.id, lineId));
+  }
+
+  /**
+   * Swaps a song's body inside one transaction.
+   *
+   * Delete-then-insert rather than a diff: the sections are renumbered on every
+   * save and line identity is not stable across a re-paste, so a diff would be
+   * guesswork dressed up as precision. The cascade on `sections.song_id` takes
+   * the old lines with it.
+   *
+   * The whole thing is one transaction because the alternative — a song with its
+   * old body deleted and its new one half-inserted — is the one state nothing
+   * downstream is written to survive.
+   */
+  async replaceBody(
+    songId: string,
+    newSections: readonly ValidatedSection[],
+  ): Promise<void> {
+    await this.db.transaction(async (tx) => {
+      await tx.delete(sections).where(eq(sections.songId, songId));
+
+      for (const section of newSections) {
+        const [inserted] = await tx
+          .insert(sections)
+          .values({ songId, position: section.position, label: section.label })
+          .returning({ id: sections.id });
+
+        if (!inserted) throw new Error('section insert returned no row');
+
+        if (section.lines.length === 0) continue;
+
+        await tx.insert(lines).values(
+          section.lines.map((line) => ({
+            sectionId: inserted.id,
+            position: line.position,
+            original: line.original,
+            rendering: line.rendering,
+            note: line.note,
+            tags: [...line.tags],
+          })),
+        );
+      }
+
+      await tx.update(songs).set({ updatedAt: new Date() }).where(eq(songs.id, songId));
+    });
+  }
+
+  /**
+   * Creates a song with no body yet.
+   *
+   * A taken slug comes back as `null` rather than an exception: two people
+   * asking for the same song in the same language is an ordinary thing to
+   * happen, and the caller wants to carry on with the one that exists.
+   */
+  async create(input: NewSong): Promise<Song | null> {
+    const [row] = await this.db
+      .insert(songs)
+      .values({
+        slug: input.slug,
+        title: input.title,
+        artist: input.artist,
+        sourceLanguage: input.source,
+        targetLanguage: input.target,
+        provenance: input.provenance,
+        engineVersion: input.engineVersion,
+        feelProfile: input.feelProfile,
+        requestedBy: input.requestedBy,
+      })
+      .onConflictDoNothing({ target: songs.slug })
+      .returning();
+
+    if (!row) return null;
+    return this.hydrate(row);
   }
 
   async countAll(): Promise<number> {

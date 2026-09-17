@@ -140,7 +140,7 @@
     "backToLibrary": "Back to the library",
     "pairLabel": "Translation direction",
     "engineLabel": "Engine",
-    "feelProfile": "Feel profile",
+    "feelProfile": "The feeling",
     "notesToggle": "Notes",
     "notesOn": "Hide the notes",
     "notesOff": "Show the notes",
@@ -153,7 +153,7 @@
     "sectionLabel": "Section",
     "excerptNotice": "This page shows {shown} of {total} lines. Lyrics are copyrighted, so public pages quote the minimum and the rest travels only in a personal link.",
     "publicDomainNotice": "These lyrics are in the public domain, so the whole song can live here.",
-    "shareButton": "Share",
+    "shareButton": "Read the whole song",
     "suggestButton": "Suggest a line",
     "cardButton": "Make a card",
     "noLines": "This song has no lines yet."
@@ -165,9 +165,9 @@
     "lineOf": "Line {position} of {total}"
   },
   "share": {
-    "title": "Share this song",
-    "body": "Copy the link below. Whoever opens it sees the same song on this site — the words travel inside the # part of the link and never touch a server.",
-    "copy": "Copy link",
+    "title": "The whole song is in this link",
+    "body": "Open it to read every line, or send the link to somebody. The words travel inside the part after the # — browsers never transmit that, so the song goes from your device straight to theirs and touches no server of ours.",
+    "copy": "Copy the link",
     "copied": "Copied.",
     "copyFailed": "Could not copy automatically. Select the text and copy it by hand.",
     "close": "Close",
@@ -179,7 +179,8 @@
     "pastePlaceholder": "#f1.eNq…",
     "pasteSubmit": "Open",
     "pasteInvalid": "That link could not be read. Check that the whole thing was copied.",
-    "unavailable": "This song cannot be shared in full."
+    "unavailable": "This song cannot be shared in full.",
+    "open": "Open it"
   },
   "shared": {
     "title": "Shared with you",
@@ -226,7 +227,7 @@
     "aliasPlaceholder": "Shown on the queue and on the song",
     "lyricsLabel": "The lyrics",
     "lyricsPlaceholder": "Paste the words here — a chorus is enough to start",
-    "lyricsPrivacy": "The words are used to work out the song’s shape and are then discarded. Nothing you paste is stored on this site.",
+    "lyricsPrivacy": "The words are used to work out the song’s shape, and kept only until your song is translated — then they are deleted. They are never shown on the site.",
     "submit": "Add to the queue",
     "submitting": "Adding…",
     "success": "Added. Your request is in the queue below.",
@@ -264,7 +265,7 @@
     "submitHintWithoutLyrics": "{count, plural, =0 {Nothing is waiting on words right now.} one {# song is waiting on words.} other {# songs are waiting on words.}} Without lyrics, yours waits too.",
     "doneTitle": "It is in.",
     "doneDuplicateTitle": "Somebody already asked — you are on it too.",
-    "doneWithLyrics": "{count, plural, one {# line} other {# lines}} came through and the song is in the queue. The words themselves are already gone.",
+    "doneWithLyrics": "{count, plural, one {# line} other {# lines}} came through and the song is in the queue. The words stay only until it is translated.",
     "doneWithoutLyrics": "It is on the list, waiting for somebody to bring the words. Paste them yourself any time and it moves to the front.",
     "doneNext": {
       "one": "Every line gets a literal reading and a sung-order reading, and the one that keeps the feeling wins.",
@@ -352,7 +353,14 @@
     "editorSaving": "Saving…",
     "editorSaved": "Saved — {lines, plural, one {# line} other {# lines}}, up from {before}.",
     "editorBlocked": "{count, plural, one {# line still has no rendering} other {# lines still have no rendering}}.",
-    "editorReady": "Every line has a rendering."
+    "editorReady": "Every line has a rendering.",
+    "requestOpenHint": "Open the song files this asked for: one per target language ({targets}). The asker’s paste is waiting in the Lyrics tab.",
+    "requestSourceLabel": "Sung in",
+    "requestSourcePlaceholder": "Pick the language",
+    "requestOpenAction": "Open the song files",
+    "requestOpened": "{count, plural, one {# song opened} other {# songs opened}}. Finish them in the Lyrics tab.",
+    "editorPasteFromRequest": "The asker’s paste is in the box.",
+    "editorSavedAndClosed": "Saved — {lines, plural, one {# line} other {# lines}}. The request is marked ready and the asker’s words are deleted."
   },
   "errors": {
     "title": "Something went wrong",

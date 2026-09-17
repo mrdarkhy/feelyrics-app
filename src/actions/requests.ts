@@ -62,6 +62,7 @@ export async function submitRequestAction(
     requesterNote: input.requesterNote,
     hasLyrics: lineCount > 0,
     lyricLineCount: lineCount > 0 ? lineCount : null,
+    pastedLyrics: pasted.length > 0 ? pasted : null,
     submitterKey: key,
   });
 

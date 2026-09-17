@@ -1,5 +1,6 @@
 import type { LanguageCode, TargetLanguage } from '@/domain/shared/language';
-import type { Song } from '@/domain/song/song';
+import type { LyricsProvenance, Song } from '@/domain/song/song';
+import type { ValidatedSection } from '@/domain/song/body';
 import type { SongRequest, RequestStatus } from '@/domain/request/song-request';
 import type {
   Suggestion,
@@ -41,6 +42,19 @@ export interface SongSummary {
   readonly updatedAt: Date;
 }
 
+/** Everything a song needs to exist, before it has a body. */
+export interface NewSong {
+  readonly slug: string;
+  readonly title: string;
+  readonly artist: string;
+  readonly source: LanguageCode;
+  readonly target: TargetLanguage;
+  readonly provenance: LyricsProvenance;
+  readonly engineVersion: string;
+  readonly feelProfile: string | null;
+  readonly requestedBy: string | null;
+}
+
 export interface SongRepository {
   /**
    * Summaries for the library. Carries no lyric lines at all, so listing pages
@@ -65,6 +79,18 @@ export interface SongRepository {
   /** Replaces the rendering of one line, used when a suggestion is accepted. */
   updateLineRendering(lineId: string, rendering: string): Promise<void>;
 
+  /**
+   * Swaps a song's whole body for a new one, atomically.
+   *
+   * Whole-body rather than line-by-line because that is the real operation: the
+   * maintainer pastes a song and translates it, and a half-applied swap would
+   * leave the catalogue holding two different versions of the same lyric.
+   */
+  replaceBody(songId: string, sections: readonly ValidatedSection[]): Promise<void>;
+
+  /** Creates an empty song. Returns null when the slug is already taken. */
+  create(input: NewSong): Promise<Song | null>;
+
   countAll(): Promise<number>;
 }
 
@@ -77,6 +103,8 @@ export interface RequestFilter {
 export interface RequestRepository {
   list(filter: RequestFilter): Promise<readonly SongRequest[]>;
   findById(id: string): Promise<SongRequest | null>;
+  /** The open request a song was created for, if there is one. */
+  findBySongSlug(slug: string): Promise<SongRequest | null>;
   create(input: ValidatedRequest): Promise<SongRequest>;
   save(request: SongRequest): Promise<SongRequest>;
   /** Guards against the same song being asked for twice in a row. */
