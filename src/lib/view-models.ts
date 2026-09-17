@@ -136,6 +136,12 @@ export interface SongSummaryView {
   readonly requestedBy: string | null;
   readonly validatedBy: string | null;
   readonly lineCount: number;
+  /**
+   * ISO string. Sorting by recency happens in the browser, so the value has to
+   * survive the server-to-client hop — `Date` does not, and comparing ISO-8601
+   * strings lexicographically is the same ordering anyway.
+   */
+  readonly updatedAt: string;
 }
 
 export function toSongSummaryView(summary: SongSummary): SongSummaryView {
@@ -149,6 +155,7 @@ export function toSongSummaryView(summary: SongSummary): SongSummaryView {
     requestedBy: summary.requestedBy,
     validatedBy: summary.validatedBy,
     lineCount: summary.lineCount,
+    updatedAt: summary.updatedAt.toISOString(),
   };
 }
 

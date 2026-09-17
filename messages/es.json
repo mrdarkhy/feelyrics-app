@@ -18,7 +18,9 @@
     "aboutTitle": "Sobre Feelyrics",
     "aboutDescription": "Por qué traducir el sentimiento de una canción da algo distinto de una traducción literal, y cómo se hace aquí.",
     "sharedTitle": "Una canción que te han compartido",
-    "sharedDescription": "Abre la traducción que alguien te ha enviado."
+    "sharedDescription": "Abre la traducción que alguien te ha enviado.",
+    "pairTitle": "Traducciones de canciones {source} → {target}",
+    "pairDescription": "Canciones traducidas de {source} a {target} por su sentimiento y no por sus palabras, con una nota en cada verso que explica la decisión."
   },
   "nav": {
     "home": "Inicio",
@@ -92,7 +94,10 @@
       "twoBody": "Cada verso pasa por la prueba de lo literal y por la del orden cantado, y luego recibe una etiqueta que dice por qué ganó la opción elegida.",
       "threeTitle": "Los hablantes nativos lo corrigen",
       "threeBody": "Cualquiera puede proponer un verso mejor. Las correcciones aceptadas cambian lo que verá quien lea después."
-    }
+    },
+    "justAdded": "Recién añadidas",
+    "browsePairs": "Explorar por par de idiomas",
+    "pickASong": "Elige una canción de la lista de la izquierda para leerla."
   },
   "library": {
     "title": "Biblioteca",
@@ -114,7 +119,21 @@
     "excerptBadge": "Extracto",
     "fullBadge": "Texto completo",
     "validatedBadge": "Verificada",
-    "requestedByBadge": "Pedida"
+    "requestedByBadge": "Pedida",
+    "sortLabel": "Ordenar",
+    "sort": {
+      "pair": "Por par de idiomas",
+      "newest": "Más recientes primero",
+      "title": "Título A–Z"
+    },
+    "resultCount": "{count, plural, =0 {Sin canciones} one {# canción} other {# canciones}}",
+    "filterQuery": "«{query}»",
+    "filterInto": "Al: {language}",
+    "filterFrom": "Desde: {language}",
+    "removeFilter": "Quitar el filtro: {label}",
+    "clearAll": "Limpiar todo",
+    "railLabel": "Lista de canciones",
+    "pairIntro": "{count, plural, one {# canción traducida} other {# canciones traducidas}} de {source} a {target}, con el porqué de cada verso."
   },
   "song": {
     "backToLibrary": "Volver a la biblioteca",

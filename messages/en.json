@@ -18,7 +18,9 @@
     "aboutTitle": "About Feelyrics",
     "aboutDescription": "Why a feeling-first translation of a song is a different artefact from a literal one, and how this project builds them.",
     "sharedTitle": "A song shared with you",
-    "sharedDescription": "Open a feel-translation somebody sent you."
+    "sharedDescription": "Open a feel-translation somebody sent you.",
+    "pairTitle": "{source} → {target} song translations",
+    "pairDescription": "Songs translated from {source} into {target} for their feeling rather than their words, with a note on every line explaining the call behind it."
   },
   "nav": {
     "home": "Home",
@@ -92,7 +94,10 @@
       "twoBody": "Every line gets a literal-first check and a sung-order check, then a reason tag saying why the winner won.",
       "threeTitle": "Native speakers correct it",
       "threeBody": "Anyone can suggest a better line. Accepted corrections change what the next reader sees."
-    }
+    },
+    "justAdded": "Just added",
+    "browsePairs": "Browse by language pair",
+    "pickASong": "Pick a song from the list on the left to read it."
   },
   "library": {
     "title": "Library",
@@ -114,7 +119,21 @@
     "excerptBadge": "Excerpt",
     "fullBadge": "Full text",
     "validatedBadge": "Feel-checked",
-    "requestedByBadge": "Requested"
+    "requestedByBadge": "Requested",
+    "sortLabel": "Sort",
+    "sort": {
+      "pair": "By language pair",
+      "newest": "Newest first",
+      "title": "Title A–Z"
+    },
+    "resultCount": "{count, plural, =0 {No songs} one {# song} other {# songs}}",
+    "filterQuery": "“{query}”",
+    "filterInto": "Into: {language}",
+    "filterFrom": "From: {language}",
+    "removeFilter": "Remove filter: {label}",
+    "clearAll": "Clear all",
+    "railLabel": "Song list",
+    "pairIntro": "{count, plural, one {# song} other {# songs}} translated from {source} into {target} — each line carrying the reasoning behind it."
   },
   "song": {
     "backToLibrary": "Back to the library",

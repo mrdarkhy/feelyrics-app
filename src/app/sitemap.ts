@@ -1,6 +1,7 @@
 import type { MetadataRoute } from 'next';
 import { getContainer } from '@/infrastructure/container';
-import { listSongSlugs } from '@/application/use-cases/songs';
+import { listSongs, listSongSlugs } from '@/application/use-cases/songs';
+import { distinctPairs, pairSlug } from '@/lib/pairs';
 import { UI_LOCALES } from '@/domain/shared/language';
 import { siteUrl } from '@/lib/env';
 
@@ -53,6 +54,27 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         alternates: alternatesFor(path),
       });
     }
+  }
+
+  // Pair pages. They rank for the query people actually type — "<language> song
+  // translations" — and they are the only crawlable route into a filtered view
+  // of the catalogue, since the rail's filters live in the browser.
+  try {
+    const summaries = await listSongs(getContainer());
+    for (const pair of distinctPairs(summaries)) {
+      const path = `/pairs/${pairSlug(pair)}`;
+      for (const locale of UI_LOCALES) {
+        entries.push({
+          url: `${origin}/${locale}${path}`,
+          lastModified: new Date(),
+          changeFrequency: 'weekly',
+          priority: 0.8,
+          alternates: alternatesFor(path),
+        });
+      }
+    }
+  } catch {
+    // Same tolerance as above: a missing database costs entries, not the build.
   }
 
   return entries;

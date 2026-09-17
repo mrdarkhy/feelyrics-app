@@ -83,6 +83,22 @@
   }
 }
 
+/**
+ * The entrance. Content arrives a little below where it belongs and settles —
+ * the same direction the eye travels down a page, so it reads as the page
+ * catching up with you rather than as an effect being performed at you.
+ */
+@keyframes fl-rise {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 10px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 @layer base {
   :root {
     color-scheme: dark;
@@ -185,6 +201,83 @@
     background-color: var(--color-panel);
     border: 1px solid var(--color-line);
     border-radius: var(--radius-card);
+  }
+
+  /**
+   * Entrance motion.
+   *
+   * Both rules live inside `prefers-reduced-motion: no-preference` rather than
+   * relying on the blanket reduce rule above. They use `both` fill, which means
+   * the element holds the opening frame — invisible — until the animation runs;
+   * if the animation were merely shortened instead of removed, a staggered
+   * child would still wait out its delay at opacity 0. Inside this query the
+   * declaration simply never applies, and the content is just there.
+   */
+  @media (prefers-reduced-motion: no-preference) {
+    .fl-enter {
+      animation: fl-rise 420ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    .fl-stagger > * {
+      animation: fl-rise 420ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    /* Eight steps of 35ms, then everything below lands together. Past about a
+       third of a second the delay stops reading as rhythm and starts reading as
+       the page being slow. */
+    .fl-stagger > *:nth-child(1) {
+      animation-delay: 0ms;
+    }
+    .fl-stagger > *:nth-child(2) {
+      animation-delay: 35ms;
+    }
+    .fl-stagger > *:nth-child(3) {
+      animation-delay: 70ms;
+    }
+    .fl-stagger > *:nth-child(4) {
+      animation-delay: 105ms;
+    }
+    .fl-stagger > *:nth-child(5) {
+      animation-delay: 140ms;
+    }
+    .fl-stagger > *:nth-child(6) {
+      animation-delay: 175ms;
+    }
+    .fl-stagger > *:nth-child(7) {
+      animation-delay: 210ms;
+    }
+    .fl-stagger > *:nth-child(n + 8) {
+      animation-delay: 245ms;
+    }
+  }
+
+  /**
+   * A row in the rail. The left edge is the state, not the background: a filled
+   * bar for the song being read, a faint one on hover, so the two are never
+   * confused at a glance.
+   */
+  .fl-rail-row {
+    position: relative;
+  }
+
+  .fl-rail-row::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 10px;
+    bottom: 10px;
+    width: 3px;
+    border-radius: 999px;
+    background-color: transparent;
+    transition: background-color 140ms ease-out;
+  }
+
+  .fl-rail-row:hover::before {
+    background-color: var(--color-line-strong);
+  }
+
+  .fl-rail-row[aria-current='page']::before {
+    background-color: var(--color-amber);
   }
 
   /** Subtle concrete grain — the texture from the brand references. */

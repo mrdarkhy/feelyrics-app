@@ -18,7 +18,9 @@
     "aboutTitle": "Feelyrics hakkında",
     "aboutDescription": "Bir şarkının hisle çevirisi neden düz çeviriden bambaşka bir şeydir ve bu proje onları nasıl üretiyor.",
     "sharedTitle": "Sana gönderilen bir şarkı",
-    "sharedDescription": "Birinin seninle paylaştığı his çevirisini aç."
+    "sharedDescription": "Birinin seninle paylaştığı his çevirisini aç.",
+    "pairTitle": "{source} → {target} şarkı çevirileri",
+    "pairDescription": "{source} dilinden {target} diline, kelimesi kelimesine değil hissiyle çevrilmiş şarkılar; her satırda o kararın gerekçesiyle."
   },
   "nav": {
     "home": "Ana sayfa",
@@ -92,7 +94,10 @@
       "twoBody": "Her satır literal-first ve söyleniş-sırası kontrolünden geçer; sonra kazananın neden kazandığını söyleyen bir neden-etiketi alır.",
       "threeTitle": "Ana dili konuşanlar düzeltir",
       "threeBody": "Herkes daha iyi bir satır önerebilir. Kabul edilen düzeltmeler, sonraki okurun gördüğü şeyi değiştirir."
-    }
+    },
+    "justAdded": "Yeni eklenenler",
+    "browsePairs": "Dil çiftine göre gez",
+    "pickASong": "Okumak için soldaki listeden bir şarkı seç."
   },
   "library": {
     "title": "Kütüphane",
@@ -114,7 +119,21 @@
     "excerptBadge": "Çekirdek",
     "fullBadge": "Tam metin",
     "validatedBadge": "His onaylı",
-    "requestedByBadge": "İstek üzerine"
+    "requestedByBadge": "İstek üzerine",
+    "sortLabel": "Sırala",
+    "sort": {
+      "pair": "Dil çiftine göre",
+      "newest": "Önce yeniler",
+      "title": "Başlığa göre A–Z"
+    },
+    "resultCount": "{count, plural, =0 {Şarkı yok} other {# şarkı}}",
+    "filterQuery": "“{query}”",
+    "filterInto": "Hedef: {language}",
+    "filterFrom": "Kaynak: {language}",
+    "removeFilter": "Filtreyi kaldır: {label}",
+    "clearAll": "Hepsini temizle",
+    "railLabel": "Şarkı listesi",
+    "pairIntro": "{source} dilinden {target} diline çevrilmiş {count, plural, other {# şarkı}} — her satırın altında o kararın gerekçesi var."
   },
   "song": {
     "backToLibrary": "Kütüphaneye dön",

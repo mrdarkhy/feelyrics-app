@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import type { Page } from '@playwright/test';
 
 /**
  * End-to-end checks against a real production build and a real database.
@@ -11,6 +12,11 @@ import { expect, test } from '@playwright/test';
  */
 
 test.describe('library', () => {
+  // The rail's rows are marked, because the page also carries shelf links to the
+  // same songs and a plain href selector would count a song twice.
+  const railRows = (page: Page) =>
+    page.locator('[data-song-link]');
+
   test('lists songs and filters them without a page load', async ({ page }) => {
     await page.goto('/en');
 
@@ -18,31 +24,110 @@ test.describe('library', () => {
       'Hear it. Understand it. Feel it.',
     );
 
-    const cards = page.locator('a[href*="/songs/"]');
-    const initial = await cards.count();
-    expect(initial).toBeGreaterThan(20);
+    const rows = railRows(page);
+    expect(await rows.count()).toBeGreaterThan(20);
 
     await page.getByRole('searchbox', { name: /search songs or artists/i }).fill('Tarkan');
-    await expect(cards).toHaveCount(2, { timeout: 5_000 });
+    await expect(rows).toHaveCount(2, { timeout: 5_000 });
 
     // Both directions of the same song must survive as separate entries.
-    await expect(page.locator('a[href$="tarkan-simarik-tr-en"]')).toBeVisible();
-    await expect(page.locator('a[href$="tarkan-simarik-tr-es"]')).toBeVisible();
+    await expect(page.locator('[data-song-link="tarkan-simarik-tr-en"]')).toBeVisible();
+    await expect(page.locator('[data-song-link="tarkan-simarik-tr-es"]')).toBeVisible();
+  });
+
+  test('searches the feel profile, not only the title', async ({ page }) => {
+    await page.goto('/en');
+    const rows = railRows(page);
+
+    await page
+      .getByRole('searchbox', { name: /search songs or artists/i })
+      .fill('elegy');
+
+    // Gülpembe's title contains no such word; its feel profile does.
+    await expect(page.locator('[data-song-link="baris-manco-gulpembe-tr-en"]')).toBeVisible();
+    expect(await rows.count()).toBeLessThan(10);
   });
 
   test('narrows by target language', async ({ page }) => {
     await page.goto('/en');
-    const cards = page.locator('a[href*="/songs/"]');
-    const all = await cards.count();
+    const rows = railRows(page);
+    const all = await rows.count();
 
     await page
       .getByRole('radiogroup', { name: /^into$/i })
       .getByRole('radio', { name: 'Spanish' })
       .click();
-    const spanishOnly = await cards.count();
+    const spanishOnly = await rows.count();
 
     expect(spanishOnly).toBeGreaterThan(0);
     expect(spanishOnly).toBeLessThan(all);
+
+    // The filter announces itself and can be taken off again.
+    await expect(page.getByText('Into: Spanish')).toBeVisible();
+    await page.getByRole('button', { name: /remove filter: spanish/i }).click();
+    await expect(rows).toHaveCount(all);
+  });
+
+  test('sorting by title drops the pair headings', async ({ page }) => {
+    await page.goto('/en');
+
+    await expect(page.getByRole('heading', { name: /turkish → english/i })).toBeVisible();
+
+    await page.getByRole('combobox', { name: /^sort$/i }).click();
+    await page.getByRole('option', { name: /title a–z/i }).click();
+
+    await expect(page.getByRole('heading', { name: /turkish → english/i })).toHaveCount(0);
+    expect(await railRows(page).count()).toBeGreaterThan(20);
+  });
+
+  test('the rail keeps its filter when a song is opened', async ({ page }, testInfo) => {
+    test.skip(
+      testInfo.project.name !== 'desktop',
+      'beside an open song there is no room for the rail on a phone',
+    );
+
+    await page.goto('/en');
+    await page.getByRole('searchbox', { name: /search songs or artists/i }).fill('Tarkan');
+    await expect(railRows(page)).toHaveCount(2);
+
+    await page.locator('[data-song-link="tarkan-simarik-tr-en"]').click();
+    await expect(page).toHaveURL(/\/en\/songs\/tarkan-simarik-tr-en/);
+
+    // The rail lives in the layout, so the navigation must not have reset it.
+    await expect(railRows(page)).toHaveCount(2);
+    await expect(
+      page.getByRole('searchbox', { name: /search songs or artists/i }),
+    ).toHaveValue('Tarkan');
+    await expect(page.locator('[data-song-link="tarkan-simarik-tr-en"]')).toHaveAttribute(
+      'aria-current',
+      'page',
+    );
+  });
+});
+
+test.describe('pair pages', () => {
+  test('a language pair has a page of its own, in every language', async ({ page }) => {
+    await page.goto('/en/pairs/es-to-tr');
+
+    await expect(page.getByRole('heading', { level: 1 })).toContainText('Spanish → Turkish');
+    expect(await page.locator('[data-shelf-link]').count()).toBeGreaterThan(5);
+
+    for (const locale of ['en', 'tr', 'es']) {
+      await expect(
+        page.locator(`link[rel="alternate"][hreflang="${locale}"]`),
+      ).toHaveAttribute('href', new RegExp(`/${locale}/pairs/es-to-tr`));
+    }
+  });
+
+  test('is listed in the sitemap and refuses a pair that does not exist', async ({
+    page,
+    request,
+  }) => {
+    const sitemap = await request.get('/sitemap.xml');
+    expect(await sitemap.text()).toContain('/en/pairs/es-to-tr');
+
+    const response = await page.goto('/en/pairs/es-to-es');
+    expect(response?.status()).toBe(404);
   });
 });
 
@@ -143,6 +228,20 @@ test.describe('internationalisation', () => {
 });
 
 test.describe('requests', () => {
+  /**
+   * Each test submits as its own client.
+   *
+   * The queue is rate-limited per submitter address, which is correct — but the
+   * whole suite runs from one loopback address, so without this the sixth run
+   * within an hour fails on the quota rather than on a defect, and points at the
+   * wrong thing when it does. The limit itself is asserted below, deliberately.
+   */
+  test.beforeEach(async ({ context }, testInfo) => {
+    await context.setExtraHTTPHeaders({
+      'x-forwarded-for': `e2e-${testInfo.project.name}-${testInfo.title}-${Date.now()}`,
+    });
+  });
+
   test('shows the queue and accepts a new request', async ({ page }) => {
     await page.goto('/en/requests');
     await expect(page.getByRole('heading', { level: 1 })).toContainText('Request queue');
@@ -168,6 +267,10 @@ test.describe('requests', () => {
 
     await expect(page.locator('form').getByRole('alert')).toContainText(/language/i);
   });
+
+  // The rate limit itself is covered in tests/unit/requests.test.ts. Driving six
+  // submissions through the form to prove a counting rule tested the browser's
+  // patience rather than the rule.
 });
 
 test.describe('sharing', () => {
@@ -200,7 +303,13 @@ test.describe('sharing', () => {
 
 test.describe('accessibility', () => {
   test('every page has one h1, a main landmark and a skip link', async ({ page }) => {
-    for (const path of ['/en', '/en/requests', '/en/about', '/en/songs/tarkan-simarik-tr-en']) {
+    for (const path of [
+      '/en',
+      '/en/requests',
+      '/en/about',
+      '/en/pairs/es-to-tr',
+      '/en/songs/tarkan-simarik-tr-en',
+    ]) {
       await page.goto(path);
       await expect(page.locator('h1')).toHaveCount(1);
       await expect(page.locator('main#main')).toBeVisible();

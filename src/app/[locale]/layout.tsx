@@ -110,11 +110,10 @@ export default async function LocaleLayout({
 
             <div className="flex min-h-dvh flex-col">
               <SiteHeader />
-              <main
-                id="main"
-                aria-label={t('mainLandmark')}
-                className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 sm:py-12"
-              >
+              {/* No width or padding here on purpose: the library is a
+                  full-bleed two-pane console and the ordinary pages are a
+                  centred column, so each route group sets its own container. */}
+              <main id="main" aria-label={t('mainLandmark')} className="flex-1">
                 {children}
               </main>
               <SiteFooter />

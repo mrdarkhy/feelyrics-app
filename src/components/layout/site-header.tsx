@@ -66,7 +66,9 @@ export function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-ground/85 backdrop-blur-md">
-      <div className="mx-auto flex h-16 max-w-6xl items-center gap-3 px-4 sm:px-6">
+      {/* Matches the library's frame rather than the reading column, so the
+          wordmark sits over the rail instead of floating away from it. */}
+      <div className="mx-auto flex h-16 max-w-[1440px] items-center gap-3 px-4 sm:px-6 lg:px-6">
         <Link
           href="/"
           className="rounded-lg focus-visible:outline-2 focus-visible:outline-amber"
