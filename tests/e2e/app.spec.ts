@@ -259,6 +259,54 @@ test.describe('requests', () => {
     await expect(page.getByText(unique)).toBeVisible({ timeout: 15_000 });
   });
 
+  test('reads a pasted lyric back before anything is submitted', async ({ page }) => {
+    await page.goto('/en/requests');
+
+    await page.getByLabel(/^the lyrics/i).fill(
+      ['[Verse]', 'first line', 'second line', '', '[Chorus]', 'hook', '', '[Chorus]', 'hook'].join(
+        '\n',
+      ),
+    );
+    // The preview runs when the paste is done, not on every keystroke.
+    await page.getByLabel('Song title').click();
+
+    await expect(page.getByText(/what we found/i)).toBeVisible();
+    await expect(page.getByText(/3 lines/)).toBeVisible();
+    await expect(page.getByText(/2 sections/)).toBeVisible();
+    // The chorus appears twice in the paste and is collapsed into one block.
+    await expect(page.getByText(/1 repeated block/)).toBeVisible();
+  });
+
+  test('a request that arrives with lyrics says so and keeps none of them', async ({
+    page,
+  }) => {
+    await page.goto('/en/requests');
+
+    const unique = `Pasted Song ${Date.now()}`;
+    await page.getByLabel(/^the lyrics/i).fill('[Verse]\nSome words\nMore words');
+    await page.getByLabel('Song title').fill(unique);
+    await page.getByLabel('Artist').fill('Test Artist');
+    await page.getByLabel(/why this song/i).fill('My grandmother sang this one.');
+    await page
+      .getByRole('group', { name: /translate it into/i })
+      .getByRole('button', { name: 'Turkish', exact: true })
+      .click();
+
+    await page.getByRole('button', { name: /add to the queue/i }).click();
+
+    await expect(page.getByRole('heading', { name: /it is in/i })).toBeVisible({
+      timeout: 15_000,
+    });
+    await expect(page.getByText(/2 lines came through/i)).toBeVisible();
+
+    // The queue shows the count and the asker's own sentence — never the words.
+    // Earlier runs leave their own rows behind, so match this request's row.
+    const row = page.locator('li').filter({ hasText: unique }).first();
+    await expect(row.getByText('2 lines ready')).toBeVisible();
+    await expect(row.getByText(/my grandmother sang this one/i)).toBeVisible();
+    await expect(page.getByText('Some words')).toHaveCount(0);
+  });
+
   test('refuses a request with no target language', async ({ page }) => {
     await page.goto('/en/requests');
     await page.getByLabel('Song title').fill('No Target');
@@ -382,6 +430,83 @@ test.describe('the extraction endpoint', () => {
 
     const wrongMethod = await request.get('/api/extract');
     expect(wrongMethod.status()).toBe(405);
+  });
+});
+
+const ADMIN_TOKEN = process.env.ADMIN_TOKEN ?? '';
+
+test.describe('the lyrics editor', () => {
+  /**
+   * The screen that lets the catalogue grow without a database connection.
+   * Desktop only: both projects would otherwise write the same song's body at
+   * the same time, and the race would be the test's, not the app's.
+   */
+  test('saves a pasted body, and the public page still shows two lines', async ({
+    page,
+  }, testInfo) => {
+    test.skip(testInfo.project.name !== 'desktop', 'one writer at a time');
+    test.skip(ADMIN_TOKEN.length === 0, 'needs ADMIN_TOKEN in the environment');
+
+    const slug = 'duman-bu-aksam-tr-en';
+
+    await page.goto('/en/admin');
+    await page.getByLabel(/maintainer token/i).fill(ADMIN_TOKEN);
+    await page.getByRole('button', { name: /^sign in$/i }).click();
+
+    await page.getByRole('tab', { name: /lyrics/i }).click();
+
+    await page.getByLabel(/which song/i).selectOption(slug);
+    await expect(page.getByText(/in the editor|Nothing in the editor/i)).toBeVisible();
+
+    // A paired paste: the lyric on the left of the bar, the rendering on the
+    // right. This is the shape that lets a finished song arrive in one go.
+    const marker = `takes it all ${Date.now()}`;
+    await page.getByLabel(/paste the lyrics/i).fill(
+      [
+        '[Verse]',
+        'Bu akşam ölürüm beni kimse tutamaz | Tonight I die and nobody can hold me',
+        'Bu akşam ölürüm | Tonight I die',
+        '',
+        '[Chorus]',
+        `Gitme kal biraz daha | Stay, ${marker}`,
+        'Sen gidince ben ne yaparım | What do I do once you have gone',
+      ].join('\n'),
+    );
+
+    await page.getByRole('button', { name: /read the paste/i }).click();
+    await expect(page.getByText(/4 lines found/i)).toBeVisible();
+    await expect(page.getByText(/came with a rendering/i)).toBeVisible();
+
+    await page.getByRole('button', { name: /^save 4 lines$/i }).click();
+    await expect(page.getByText(/^Saved —/)).toBeVisible({ timeout: 15_000 });
+
+    // The body is in; the cap still holds on the page a stranger reaches.
+    await page.goto(`/en/songs/${slug}`);
+    await expect(page.locator('[data-lyric-line]')).toHaveCount(2);
+    await expect(page.getByText(/This page shows 2 of 4 lines/)).toBeVisible();
+
+    // And the whole thing travels in the link, which is the point of saving it.
+    await page.getByRole('button', { name: 'Share' }).click();
+    const link = await page.getByRole('dialog').getByLabel(/share link/i).inputValue();
+    await page.goto(new URL(link).pathname + new URL(link).hash);
+    await expect(page.getByText(marker)).toBeVisible();
+  });
+
+  test('refuses to save a body with an untranslated line', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'desktop', 'one writer at a time');
+    test.skip(ADMIN_TOKEN.length === 0, 'needs ADMIN_TOKEN in the environment');
+
+    await page.goto('/en/admin');
+    await page.getByLabel(/maintainer token/i).fill(ADMIN_TOKEN);
+    await page.getByRole('button', { name: /^sign in$/i }).click();
+    await page.getByRole('tab', { name: /lyrics/i }).click();
+
+    await page.getByLabel(/which song/i).selectOption('tarkan-simarik-tr-es');
+    await page.getByLabel(/paste the lyrics/i).fill('Bir line with no rendering at all');
+    await page.getByRole('button', { name: /read the paste/i }).click();
+
+    await expect(page.getByText(/still ha[sv]e? no rendering/i)).toBeVisible();
+    await expect(page.getByRole('button', { name: /^save /i })).toBeDisabled();
   });
 });
 

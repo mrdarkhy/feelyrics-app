@@ -39,8 +39,26 @@ export interface SongRequest {
   readonly targets: readonly TargetLanguage[];
   /** Public credit. Null when the asker preferred not to leave a name. */
   readonly requesterAlias: string | null;
+  /**
+   * One line from the asker on why this song.
+   *
+   * Not decoration. A feel-translation is a reading of what a song is doing, and
+   * the person who chose it usually knows — "my grandmother sang this" changes
+   * how the first verse should land. It is also the only part of the queue a
+   * stranger reads for pleasure, which is what makes the queue a page rather
+   * than a backlog.
+   */
+  readonly requesterNote: string | null;
   /** Whether lyrics came with the request. Drives the initial status. */
   readonly hasLyrics: boolean;
+  /**
+   * How many lines the pasted lyric held.
+   *
+   * The count, never the words: the lyric itself is discarded the moment it has
+   * been shaped, and a number is what lets the queue say "42 lines ready" without
+   * the site holding a single one of them.
+   */
+  readonly lyricLineCount: number | null;
   readonly status: RequestStatus;
   /** Set once the translation is published. */
   readonly songSlug: string | null;
@@ -102,6 +120,7 @@ export function transition(
 export const MAX_TITLE_LENGTH = 160;
 export const MAX_ARTIST_LENGTH = 160;
 export const MAX_ALIAS_LENGTH = 60;
+export const MAX_REQUESTER_NOTE_LENGTH = 280;
 export const MAX_TARGETS = 4;
 
 export interface NewRequestInput {
@@ -109,7 +128,9 @@ export interface NewRequestInput {
   readonly artist: string;
   readonly targets: readonly string[];
   readonly requesterAlias?: string | null;
+  readonly requesterNote?: string | null;
   readonly hasLyrics?: boolean;
+  readonly lyricLineCount?: number | null;
 }
 
 export interface ValidatedRequest {
@@ -117,7 +138,9 @@ export interface ValidatedRequest {
   readonly artist: string;
   readonly targets: readonly TargetLanguage[];
   readonly requesterAlias: string | null;
+  readonly requesterNote: string | null;
   readonly hasLyrics: boolean;
+  readonly lyricLineCount: number | null;
   readonly status: RequestStatus;
 }
 
@@ -161,14 +184,25 @@ export function validateNewRequest(
   }
 
   const alias = input.requesterAlias?.trim() ?? '';
+  const note = input.requesterNote?.trim() ?? '';
   const hasLyrics = input.hasLyrics === true;
+
+  // A count that did not come from a real paste is a claim about lyrics nobody
+  // brought, so it is dropped rather than stored.
+  const rawCount = input.lyricLineCount;
+  const lyricLineCount =
+    hasLyrics && typeof rawCount === 'number' && Number.isFinite(rawCount) && rawCount > 0
+      ? Math.floor(rawCount)
+      : null;
 
   return ok({
     title,
     artist,
     targets,
     requesterAlias: alias.length > 0 ? alias.slice(0, MAX_ALIAS_LENGTH) : null,
+    requesterNote: note.length > 0 ? note.slice(0, MAX_REQUESTER_NOTE_LENGTH) : null,
     hasLyrics,
+    lyricLineCount,
     status: hasLyrics ? 'queued' : 'lyrics-needed',
   });
 }

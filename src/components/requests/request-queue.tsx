@@ -52,11 +52,24 @@ export function RequestQueue({ requests }: { requests: readonly RequestView[] })
 
         const body = (
           <div className="flex w-full items-start justify-between gap-3">
-            <div className="min-w-0">
+            <div className="min-w-0 space-y-1">
               <p className="truncate font-display text-[15px] font-bold text-bone">
                 {request.title}
               </p>
               <p className="text-[13px] leading-snug text-bone-muted">{meta}</p>
+              {/* The asker's own sentence. It is the only part of a backlog a
+                  stranger reads for pleasure, so it gets room rather than a
+                  tooltip. */}
+              {request.requesterNote ? (
+                <p className="text-[13px] italic leading-relaxed text-patina">
+                  “{request.requesterNote}”
+                </p>
+              ) : null}
+              {request.lyricLineCount ? (
+                <p className="text-[12px] font-semibold text-olive">
+                  {t('linesReady', { count: request.lyricLineCount })}
+                </p>
+              ) : null}
             </div>
             {badge}
           </div>

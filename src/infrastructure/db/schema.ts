@@ -114,7 +114,11 @@ export const songRequests = pgTable(
     artist: text('artist').notNull(),
     targets: targetLanguageEnum('targets').array().notNull(),
     requesterAlias: text('requester_alias'),
+    /** One line from the asker on why this song. */
+    requesterNote: text('requester_note'),
     hasLyrics: boolean('has_lyrics').notNull().default(false),
+    /** How many lines the paste held. The count only — never the lyric. */
+    lyricLineCount: integer('lyric_line_count'),
     status: requestStatusEnum('status').notNull().default('lyrics-needed'),
     /** Points at the published song once the request is fulfilled. */
     songSlug: text('song_slug'),

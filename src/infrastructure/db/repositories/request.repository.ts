@@ -27,7 +27,9 @@ function toDomain(row: SongRequestRow): SongRequest {
     artist: row.artist,
     targets: row.targets,
     requesterAlias: row.requesterAlias,
+    requesterNote: row.requesterNote,
     hasLyrics: row.hasLyrics,
+    lyricLineCount: row.lyricLineCount,
     status: row.status,
     songSlug: row.songSlug,
     createdAt: row.createdAt,
@@ -75,7 +77,9 @@ export class DrizzleRequestRepository implements RequestRepository {
         artist: input.artist,
         targets: [...input.targets],
         requesterAlias: input.requesterAlias,
+        requesterNote: input.requesterNote,
         hasLyrics: input.hasLyrics,
+        lyricLineCount: input.lyricLineCount,
         status: input.status,
         dedupeKey: dedupeKey(input.title, input.artist),
       })
@@ -92,7 +96,9 @@ export class DrizzleRequestRepository implements RequestRepository {
         status: request.status,
         songSlug: request.songSlug,
         hasLyrics: request.hasLyrics,
+        lyricLineCount: request.lyricLineCount,
         requesterAlias: request.requesterAlias,
+        requesterNote: request.requesterNote,
         updatedAt: new Date(),
       })
       .where(eq(songRequests.id, request.id))

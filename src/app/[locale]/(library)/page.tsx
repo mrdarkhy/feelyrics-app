@@ -67,6 +67,14 @@ export default async function LibraryHomePage({
             {t('statsPairs', { count: pairs.length })}
           </p>
         </div>
+        {/* The catalogue is a shelf, not a ceiling — and the request page is
+            where that stops being a claim. */}
+        <p className="max-w-2xl rounded-card border border-line bg-panel px-4 py-3 text-[14px] leading-relaxed text-bone-muted">
+          {t('anySong')}{' '}
+          <Link href="/requests" className="font-semibold text-amber hover:underline">
+            {t('requestCta')} →
+          </Link>
+        </p>
         {/* Only worth saying where there is in fact a list to the left. */}
         <p className="hidden text-[13px] text-patina lg:block">{t('pickASong')}</p>
       </section>

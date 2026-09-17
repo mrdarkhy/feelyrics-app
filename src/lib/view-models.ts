@@ -165,6 +165,8 @@ export interface RequestView {
   readonly artist: string;
   readonly targets: readonly TargetLanguage[];
   readonly requesterAlias: string | null;
+  readonly requesterNote: string | null;
+  readonly lyricLineCount: number | null;
   readonly status: SongRequest['status'];
   readonly songSlug: string | null;
   /** ISO string: `Date` objects serialise, but the string is unambiguous. */
@@ -178,6 +180,8 @@ export function toRequestView(request: SongRequest): RequestView {
     artist: request.artist,
     targets: request.targets,
     requesterAlias: request.requesterAlias,
+    requesterNote: request.requesterNote,
+    lyricLineCount: request.lyricLineCount,
     status: request.status,
     songSlug: request.songSlug,
     createdAt: request.createdAt.toISOString(),

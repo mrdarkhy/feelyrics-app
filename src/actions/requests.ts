@@ -15,6 +15,8 @@ export interface SubmitRequestInput {
   artist: string;
   targets: string[];
   requesterAlias?: string | null;
+  /** One line on why this song — shown on the queue beside the request. */
+  requesterNote?: string | null;
   /**
    * Pasted lyrics.
    *
@@ -57,7 +59,9 @@ export async function submitRequestAction(
     artist: input.artist,
     targets: input.targets,
     requesterAlias: input.requesterAlias,
+    requesterNote: input.requesterNote,
     hasLyrics: lineCount > 0,
+    lyricLineCount: lineCount > 0 ? lineCount : null,
     submitterKey: key,
   });
 
