@@ -42,7 +42,7 @@ export function LibraryShell({
           songOpen && 'hidden lg:block',
         )}
       >
-        <div className="lg:sticky lg:top-16 lg:h-[calc(100dvh-4rem)]">
+        <div className="fl-enter lg:sticky lg:top-16 lg:h-[calc(100dvh-4rem)]">
           <LibraryRail songs={songs} activeSlug={activeSlug} />
         </div>
       </aside>

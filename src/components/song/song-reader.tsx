@@ -208,7 +208,7 @@ export function SongReader({
                 </h2>
               )}
 
-              <ul className={cn('space-y-4', suggestMode && 'space-y-2')}>
+              <ul className={cn('fl-stagger space-y-4', suggestMode && 'space-y-2')}>
                 {section.lines.map((line) => (
                   <LineRow
                     key={line.id}
