@@ -4,6 +4,7 @@ import { getContainer } from '@/infrastructure/container';
 import { isAdmin } from '@/infrastructure/auth/admin-session';
 import { listSuggestions } from '@/application/use-cases/suggestions';
 import { listQueue } from '@/application/use-cases/requests';
+import { listSongs } from '@/application/use-cases/songs';
 import { toRequestView } from '@/lib/view-models';
 import { serverEnv } from '@/lib/env';
 import { AdminLogin } from '@/components/admin/admin-login';
@@ -34,10 +35,24 @@ export default async function AdminPage({
   }
 
   const container = getContainer();
-  const [proposed, requests] = await Promise.all([
+  const [proposed, requests, summaries] = await Promise.all([
     listSuggestions(container, { status: 'proposed' }),
     listQueue(container, { includeDeclined: true }),
+    listSongs(container),
   ]);
+
+  // Summaries only: the editor loads one song's body at a time, on demand, so
+  // the maintainer's first paint never carries the catalogue's lyrics.
+  const songs = summaries
+    .map((summary) => ({
+      slug: summary.slug,
+      title: summary.title,
+      artist: summary.artist,
+      source: summary.source,
+      target: summary.target,
+      lineCount: summary.lineCount,
+    }))
+    .sort((a, b) => a.lineCount - b.lineCount || a.artist.localeCompare(b.artist));
 
   const suggestions: SuggestionView[] = proposed.map((suggestion) => ({
     id: suggestion.id,
@@ -57,6 +72,7 @@ export default async function AdminPage({
     <AdminDashboard
       suggestions={suggestions}
       requests={requests.map(toRequestView)}
+      songs={songs}
     />
   );
 }
