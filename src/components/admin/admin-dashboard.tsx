@@ -297,10 +297,7 @@ function RequestCard({
       </div>
 
       {request.requesterNote ? (
-        <p
-          lang={request.requesterNoteLanguage ?? undefined}
-          className="text-[13px] italic leading-relaxed text-patina"
-        >
+        <p className="text-[13px] italic leading-relaxed text-patina">
           “{request.requesterNote}”
         </p>
       ) : null}

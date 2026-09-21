@@ -17,8 +17,6 @@ export interface SubmitRequestInput {
   requesterAlias?: string | null;
   /** One line on why this song — shown on the queue beside the request. */
   requesterNote?: string | null;
-  /** The interface language the note was typed in. */
-  requesterNoteLanguage?: string | null;
   /**
    * Pasted lyrics.
    *
@@ -62,7 +60,6 @@ export async function submitRequestAction(
     targets: input.targets,
     requesterAlias: input.requesterAlias,
     requesterNote: input.requesterNote,
-    requesterNoteLanguage: input.requesterNoteLanguage,
     hasLyrics: lineCount > 0,
     lyricLineCount: lineCount > 0 ? lineCount : null,
     pastedLyrics: pasted.length > 0 ? pasted : null,
