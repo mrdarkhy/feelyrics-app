@@ -9,7 +9,10 @@ export default function robots(): MetadataRoute.Robots {
         allow: '/',
         // Shared songs are personal and never the same twice; the maintainer
         // area and the API have nothing to index.
-        disallow: ['/api/', '/*/s', '/*/admin'],
+        //
+        // Robots rules are prefix matches: a bare '/*/s' also blocks every
+        // '/<locale>/songs/…' page. The '$' anchors the rule to the share page itself.
+        disallow: ['/api/', '/*/s$', '/*/admin'],
       },
     ],
     sitemap: `${siteUrl()}/sitemap.xml`,
