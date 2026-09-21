@@ -112,7 +112,17 @@ export async function translateNow(
     );
   }
 
-  const draft = assembleEngineDraft(brief, extractJsonObject(reply));
+  const parsed = extractJsonObject(reply);
+  if (parsed === null) {
+    // The reply itself is the only clue; a bounded slice is enough to see why.
+    console.error('[translate-now] unparsable reply', {
+      length: reply.length,
+      head: reply.slice(0, 400),
+      tail: reply.slice(-200),
+    });
+    return err(domainError('engine_failed', 'reply held no JSON object'));
+  }
+  const draft = assembleEngineDraft(brief, parsed);
   if (isErr(draft)) return draft;
 
   const validated = validateSongBody(draft.value.sections);

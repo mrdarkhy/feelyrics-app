@@ -157,3 +157,16 @@ describe('share package sync data', () => {
     expect(back.sync).toEqual({ spotifyTrackId: null, timings: null });
   });
 });
+
+describe('extractJsonObject robustness', () => {
+  it('stops at the matching brace even when prose with braces follows', () => {
+    const text = 'Here you go:\n{"feel":"x","sections":[{"label":"a","lines":[]}]}\nNote: {not json}';
+    expect(extractJsonObject(text)).toEqual({ feel: 'x', sections: [{ label: 'a', lines: [] }] });
+  });
+  it('handles braces inside strings', () => {
+    expect(extractJsonObject('{"feel":"a } b","sections":[]}')).toEqual({ feel: 'a } b', sections: [] });
+  });
+  it('returns null for a truncated object', () => {
+    expect(extractJsonObject('{"feel":"x","sections":[{"label":"a"')).toBeNull();
+  });
+});

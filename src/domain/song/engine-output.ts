@@ -91,8 +91,38 @@ function isRecord(value: unknown): value is Record<string, unknown> {
  */
 export function extractJsonObject(text: string): unknown {
   const start = text.indexOf('{');
+  if (start < 0) return null;
+
+  // Walk the braces so the object ends where it really ends, not at the last
+  // "}" of a stray remark after the JSON. Strings are skipped, escapes honoured.
+  let depth = 0;
+  let inString = false;
+  let escaped = false;
+  for (let i = start; i < text.length; i += 1) {
+    const ch = text[i];
+    if (inString) {
+      if (escaped) escaped = false;
+      else if (ch === '\\') escaped = true;
+      else if (ch === '"') inString = false;
+      continue;
+    }
+    if (ch === '"') inString = true;
+    else if (ch === '{') depth += 1;
+    else if (ch === '}') {
+      depth -= 1;
+      if (depth === 0) {
+        try {
+          return JSON.parse(text.slice(start, i + 1));
+        } catch {
+          break;
+        }
+      }
+    }
+  }
+
+  // Unbalanced or unparsable: last resort, the widest slice.
   const end = text.lastIndexOf('}');
-  if (start < 0 || end <= start) return null;
+  if (end <= start) return null;
   try {
     return JSON.parse(text.slice(start, end + 1));
   } catch {

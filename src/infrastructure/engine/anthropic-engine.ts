@@ -65,7 +65,7 @@ function userPrompt(brief: EngineBrief): string {
     `Artist: ${brief.artist}`,
     `From ${sourceName} into ${targetName}.`,
     brief.requesterNote ? `Why the asker chose it: "${brief.requesterNote}"` : null,
-    `${brief.lineCount} lines follow, numbered. Answer with the JSON object only.`,
+    `${brief.lineCount} lines follow, numbered.`,
   ]
     .filter(Boolean)
     .join('\n');
@@ -81,7 +81,7 @@ function userPrompt(brief: EngineBrief): string {
     })
     .join('\n\n');
 
-  return `${header}\n\n${body}`;
+  return `${header}\n\n${body}\n\nReply with the JSON object only — it must start with { and end with }.`;
 }
 
 export class AnthropicEngine implements TranscreationEngine {
@@ -104,7 +104,7 @@ export class AnthropicEngine implements TranscreationEngine {
       },
       body: JSON.stringify({
         model: this.model,
-        max_tokens: 12_000,
+        max_tokens: 32_000,
         // No sampling parameters: current models reject `temperature` outright.
         system: systemPrompt(brief.target),
         messages: [{ role: 'user', content: userPrompt(brief) }],
@@ -118,7 +118,12 @@ export class AnthropicEngine implements TranscreationEngine {
 
     const payload = (await response.json()) as {
       content?: { type: string; text?: string }[];
+      stop_reason?: string;
     };
+
+    if (payload.stop_reason === 'max_tokens') {
+      throw new Error('engine reply was cut off at max_tokens — the song may be too long for one call');
+    }
 
     return (payload.content ?? [])
       .filter((block) => block.type === 'text' && typeof block.text === 'string')
