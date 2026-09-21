@@ -156,7 +156,23 @@ export function SongReader({
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            {shareUrl ? (
+            {shareUrl && isTruncated ? (
+              // The excerpt page has one job past the two lines it quotes: get
+              // the reader to the whole song. So the button is the loudest
+              // thing in the header, with a hand-drawn arrow pointing at it.
+              <div className="flex items-center gap-2">
+                <ArrowDoodle className="fl-arrow hidden h-11 w-32 shrink-0 text-amber sm:block" />
+                <Button
+                  variant="primary"
+                  size="lg"
+                  className="fl-glow"
+                  onClick={() => setShareOpen(true)}
+                >
+                  <BookIcon />
+                  {shareLabel ?? t('shareButton')}
+                </Button>
+              </div>
+            ) : shareUrl ? (
               <Button variant="ghost" size="sm" onClick={() => setShareOpen(true)}>
                 {shareLabel ?? t('shareButton')}
               </Button>
@@ -193,7 +209,15 @@ export function SongReader({
               shown: song.shownLineCount,
               total: song.totalLineCount,
             })}{' '}
-            {shareUrl ? <span className="text-feel">{t('excerptSyncHint')}</span> : null}
+            {shareUrl ? (
+              <button
+                type="button"
+                onClick={() => setShareOpen(true)}
+                className="font-semibold text-feel underline decoration-feel/50 underline-offset-2 hover:decoration-feel"
+              >
+                {t('excerptSyncHint')}
+              </button>
+            ) : null}
           </p>
         ) : null}
 
@@ -327,4 +351,49 @@ function flatIndex(
   let offset = 0;
   for (let i = 0; i < sectionIndex; i += 1) offset += song.sections[i]?.lines.length ?? 0;
   return offset + lineIndex;
+}
+
+/**
+ * A hand-drawn arrow, the kind somebody scribbles on a screenshot to say
+ * "this one". It draws itself in on arrival and points at the button beside it.
+ */
+function ArrowDoodle({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 120 44" fill="none" aria-hidden="true" className={className}>
+      <path
+        d="M3 30 C 22 30, 24 10, 40 12 S 54 32, 68 26 S 84 8, 100 14 L 112 20"
+        stroke="currentColor"
+        strokeWidth="3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        pathLength="100"
+      />
+      <path
+        d="M101 10 L 113 20 L 99 26"
+        stroke="currentColor"
+        strokeWidth="3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        pathLength="100"
+      />
+    </svg>
+  );
+}
+
+function BookIcon() {
+  return (
+    <svg
+      viewBox="0 0 20 20"
+      fill="none"
+      aria-hidden="true"
+      className="h-5 w-5 shrink-0"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M10 5.5c-1.4-1.3-3.4-1.8-6.5-1.8v11c3.1 0 5.1.5 6.5 1.8 1.4-1.3 3.4-1.8 6.5-1.8v-11c-3.1 0-5.1.5-6.5 1.8Z" />
+      <path d="M10 5.5v11" />
+    </svg>
+  );
 }
