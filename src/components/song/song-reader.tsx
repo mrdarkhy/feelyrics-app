@@ -159,17 +159,16 @@ export function SongReader({
             {shareUrl && isTruncated ? (
               // The excerpt page has one job past the two lines it quotes: get
               // the reader to the whole song. So the button is the loudest
-              // thing in the header, with a hand-drawn arrow pointing at it.
+              // thing in the header, with a hand-drawn arrow pointing at it —
+              // and it goes straight there. Copying the link is the full
+              // page's business, not a dialog in the way.
               <div className="flex items-center gap-2">
                 <ArrowDoodle className="fl-arrow hidden h-11 w-32 shrink-0 text-amber sm:block" />
-                <Button
-                  variant="primary"
-                  size="lg"
-                  className="fl-glow"
-                  onClick={() => setShareOpen(true)}
-                >
-                  <BookIcon />
-                  {shareLabel ?? t('shareButton')}
+                <Button asChild variant="primary" size="lg" className="fl-glow">
+                  <a href={effectiveShareUrl}>
+                    <BookIcon />
+                    {shareLabel ?? t('shareButton')}
+                  </a>
                 </Button>
               </div>
             ) : shareUrl ? (
@@ -210,13 +209,12 @@ export function SongReader({
               total: song.totalLineCount,
             })}{' '}
             {shareUrl ? (
-              <button
-                type="button"
-                onClick={() => setShareOpen(true)}
+              <a
+                href={effectiveShareUrl}
                 className="font-semibold text-feel underline decoration-feel/50 underline-offset-2 hover:decoration-feel"
               >
                 {t('excerptSyncHint')}
-              </button>
+              </a>
             ) : null}
           </p>
         ) : null}

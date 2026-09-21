@@ -396,20 +396,20 @@ test.describe('requests', () => {
 test.describe('sharing', () => {
   test('a share link carries the whole song in its fragment', async ({ page }) => {
     await page.goto('/en/songs/tarkan-simarik-tr-en');
-    await page.getByRole('button', { name: /read the whole song/i }).click();
 
+    // The excerpt page's loud button goes straight to the whole song — no
+    // dialog in between. The link itself carries the words in its fragment.
+    const open = page.getByRole('link', { name: /read the whole song/i });
+    const link = (await open.getAttribute('href')) ?? '';
+    expect(link).toContain('#f1.');
+    await open.click();
+    await expect(page).toHaveURL(/\/en\/s#f1\./);
+
+    // The full page is where sharing lives.
+    await page.getByRole('button', { name: /share this song/i }).click();
     const dialog = page.getByRole('dialog');
     await expect(dialog).toBeVisible();
-
-    const link = await dialog.getByLabel(/share link/i).inputValue();
-    expect(link).toContain('#f1.');
-
-    // Opening it is the primary action now — "Share" was read as "post this
-    // somewhere", and nobody found the rest of the song behind it.
-    await expect(dialog.getByRole('link', { name: /open it/i })).toHaveAttribute(
-      'href',
-      link,
-    );
+    expect(await dialog.getByLabel(/share link/i).inputValue()).toContain('#f1.');
     // The full body must be big enough that it is plainly not two lines.
     expect(link.length).toBeGreaterThan(1_000);
 
@@ -565,8 +565,8 @@ test.describe('the lyrics editor', () => {
     await expect(page.getByText(/This page shows 2 of 4 lines/)).toBeVisible();
 
     // And the whole thing travels in the link, which is the point of saving it.
-    await page.getByRole('button', { name: /read the whole song/i }).click();
-    const link = await page.getByRole('dialog').getByLabel(/share link/i).inputValue();
+    const link =
+      (await page.getByRole('link', { name: /read the whole song/i }).getAttribute('href')) ?? '';
     await page.goto(new URL(link).pathname + new URL(link).hash);
     await expect(page.getByText(marker)).toBeVisible();
   });
