@@ -123,7 +123,15 @@ export async function translateNow(
     return err(domainError('engine_failed', 'reply held no JSON object'));
   }
   const draft = assembleEngineDraft(brief, parsed);
-  if (isErr(draft)) return draft;
+  if (isErr(draft)) {
+    // Parsed, but not a song: the start of the reply shows what shape it took.
+    console.error('[translate-now] draft rejected', {
+      detail: draft.error.detail,
+      length: reply.length,
+      head: reply.slice(0, 600),
+    });
+    return draft;
+  }
 
   const validated = validateSongBody(draft.value.sections);
   if (isErr(validated)) {

@@ -17,7 +17,48 @@ const ENDPOINT = 'https://api.anthropic.com/v1/messages';
 const API_VERSION = '2023-06-01';
 const DEFAULT_MODEL = 'claude-sonnet-5';
 /** Method version + model: what a suggestion on this song is measured against. */
-export const ENGINE_METHOD_VERSION = '0.2.0';
+export const ENGINE_METHOD_VERSION = '0.2.1';
+
+/**
+ * The answer is collected as a tool call rather than as text. A forced tool
+ * call with a schema is the one way to get the object and only the object:
+ * no fence, no preamble, no wrapper key the model felt like adding.
+ */
+const ANSWER_TOOL = 'submit_transcreation';
+const ANSWER_SCHEMA = {
+  type: 'object',
+  properties: {
+    feel: { type: 'string', description: 'One short line naming the feeling the song runs on.' },
+    sections: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          label: { type: 'string', description: 'Section label, in the target language.' },
+          lines: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                i: { type: 'integer', description: 'The input line index.' },
+                t: { type: 'string', description: 'The rendering.' },
+                n: { type: 'string', description: 'Note, only where a real decision was made.' },
+                g: {
+                  type: 'array',
+                  items: { type: 'string', enum: [...REASON_TAGS] },
+                  description: 'Reason tags, only on lines with a note.',
+                },
+              },
+              required: ['i', 't'],
+            },
+          },
+        },
+        required: ['label', 'lines'],
+      },
+    },
+  },
+  required: ['feel', 'sections'],
+} as const;
 
 const TARGET_NAMES: Record<string, string> = {
   tr: 'Turkish',
@@ -52,9 +93,7 @@ Notes: write a short note ONLY where a real decision was made — what the liter
 
 Feel profile: one short line in ${targetName} naming the emotion the whole song runs on (for example an elegy in a major key; reckless abandon; grief with the brakes cut).
 
-Output: a single JSON object and nothing else, no prose, no code fence:
-{"feel":"...","sections":[{"label":"...","lines":[{"i":0,"t":"rendering","n":"note or omit","g":["tag"]}]}]}
-Rules for the JSON: one entry per input line index, every index present exactly once, in order; "t" is the rendering; omit "n" and "g" on lines without a note; section labels in ${targetName} (e.g. verse, chorus, bridge in that language). Do NOT repeat the original text anywhere in your answer.`;
+Output: submit the whole answer through the ${ANSWER_TOOL} tool, nothing else. One entry per input line index, every index present exactly once, in order; "t" is the rendering; omit "n" and "g" on lines without a note; section labels in ${targetName} (e.g. verse, chorus, bridge in that language). Do NOT repeat the original text anywhere in your answer.`;
 }
 
 function userPrompt(brief: EngineBrief): string {
@@ -81,7 +120,7 @@ function userPrompt(brief: EngineBrief): string {
     })
     .join('\n\n');
 
-  return `${header}\n\n${body}\n\nReply with the JSON object only — it must start with { and end with }.`;
+  return `${header}\n\n${body}\n\nSubmit the transcreation with the ${ANSWER_TOOL} tool.`;
 }
 
 export class AnthropicEngine implements TranscreationEngine {
@@ -108,6 +147,14 @@ export class AnthropicEngine implements TranscreationEngine {
         // No sampling parameters: current models reject `temperature` outright.
         system: systemPrompt(brief.target),
         messages: [{ role: 'user', content: userPrompt(brief) }],
+        tools: [
+          {
+            name: ANSWER_TOOL,
+            description: 'Submits the finished transcreation, one entry per input line.',
+            input_schema: ANSWER_SCHEMA,
+          },
+        ],
+        tool_choice: { type: 'tool', name: ANSWER_TOOL },
       }),
     });
 
@@ -117,7 +164,7 @@ export class AnthropicEngine implements TranscreationEngine {
     }
 
     const payload = (await response.json()) as {
-      content?: { type: string; text?: string }[];
+      content?: { type: string; text?: string; name?: string; input?: unknown }[];
       stop_reason?: string;
     };
 
@@ -125,7 +172,17 @@ export class AnthropicEngine implements TranscreationEngine {
       throw new Error('engine reply was cut off at max_tokens — the song may be too long for one call');
     }
 
-    return (payload.content ?? [])
+    const blocks = payload.content ?? [];
+    const call = blocks.find((block) => block.type === 'tool_use' && block.name === ANSWER_TOOL);
+    if (call && call.input !== undefined) return JSON.stringify(call.input);
+
+    // Should not happen with a forced tool call; the text path is the fallback
+    // and the log says which shape came back.
+    console.warn('[translate-now] engine answered without the tool call', {
+      stop: payload.stop_reason,
+      blocks: blocks.map((block) => block.type),
+    });
+    return blocks
       .filter((block) => block.type === 'text' && typeof block.text === 'string')
       .map((block) => block.text as string)
       .join('\n');

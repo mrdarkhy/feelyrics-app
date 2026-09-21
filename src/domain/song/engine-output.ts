@@ -130,6 +130,62 @@ export function extractJsonObject(text: string): unknown {
   }
 }
 
+interface SectionsAnswer extends Record<string, unknown> {
+  readonly sections: readonly unknown[];
+}
+
+/**
+ * Finds the `{feel, sections}` object wherever the model put it.
+ *
+ * Models wrap ("{"result": {...}}"), answer with a bare `lines` array, or hand
+ * back the object inside a one-element array. Each of those is the same
+ * answer wearing a different coat; only a payload with no line list at all is
+ * refused.
+ */
+export function unwrapAnswer(value: unknown, depth = 0): SectionsAnswer | null {
+  if (depth > 3) return null;
+
+  if (Array.isArray(value)) {
+    // A bare list of sections, or a list of lines.
+    if (value.length > 0 && value.every((item) => isRecord(item) && typeof item.i === 'number')) {
+      return { sections: [{ lines: value }] };
+    }
+    if (value.length > 0 && value.every((item) => isRecord(item) && Array.isArray(item.lines))) {
+      return { sections: value };
+    }
+    for (const item of value) {
+      const found = unwrapAnswer(item, depth + 1);
+      if (found) return found;
+    }
+    return null;
+  }
+
+  if (!isRecord(value)) return null;
+  if (Array.isArray(value.sections)) return value as SectionsAnswer;
+  if (Array.isArray(value.lines)) {
+    return { feel: value.feel, sections: [{ label: value.label, lines: value.lines }] };
+  }
+
+  for (const key of Object.keys(value)) {
+    const found = unwrapAnswer(value[key], depth + 1);
+    if (found) {
+      // Keep a feel profile written one level up, next to the wrapper.
+      return found.feel === undefined && typeof value.feel === 'string'
+        ? { ...found, feel: value.feel }
+        : found;
+    }
+  }
+  return null;
+}
+
+/** A one-line description of a value for a log entry: type and top-level keys. */
+export function describeShape(value: unknown): string {
+  if (value === null) return 'null';
+  if (Array.isArray(value)) return `array[${value.length}]`;
+  if (isRecord(value)) return `object{${Object.keys(value).slice(0, 12).join(',')}}`;
+  return typeof value;
+}
+
 export interface EngineDraft {
   readonly feelProfile: string | null;
   readonly sections: readonly DraftSection[];
@@ -146,10 +202,12 @@ export interface EngineDraft {
  */
 export function assembleEngineDraft(
   brief: EngineBrief,
-  answer: unknown,
+  rawAnswer: unknown,
 ): Result<EngineDraft> {
-  if (!isRecord(answer) || !Array.isArray(answer.sections)) {
-    return err(domainError('engine_failed', 'answer is not an object with sections'));
+  const answer = unwrapAnswer(rawAnswer);
+  if (!answer) {
+    const shape = describeShape(rawAnswer);
+    return err(domainError('engine_failed', `answer is not an object with sections (${shape})`));
   }
 
   const originals = new Map<number, EngineLineInput>();

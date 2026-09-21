@@ -3,6 +3,7 @@ import {
   assembleEngineDraft,
   buildEngineBrief,
   extractJsonObject,
+  unwrapAnswer,
 } from '@/domain/song/engine-output';
 import { extractLyrics } from '@/domain/lyrics/extract';
 import { validateSongBody } from '@/domain/song/body';
@@ -155,6 +156,37 @@ describe('share package sync data', () => {
     expect('sp' in pkg).toBe(false);
     const back = unwrap(fromSharePackage(JSON.parse(JSON.stringify(toSharePackage(song)))));
     expect(back.sync).toEqual({ spotifyTrackId: null, timings: null });
+  });
+});
+
+describe('unwrapAnswer', () => {
+  const inner = {
+    feel: 'x',
+    sections: [{ label: 'K', lines: [{ i: 0, t: 'a' }, { i: 1, t: 'b' }, { i: 2, t: 'c' }] }],
+  };
+
+  it('accepts the plain shape untouched', () => {
+    expect(unwrapAnswer(inner)).toBe(inner);
+  });
+
+  it('finds the answer inside a wrapper key and keeps a feel written beside it', () => {
+    expect(unwrapAnswer({ result: inner })).toBe(inner);
+    const wrapped = { feel: 'outer', translation: { sections: inner.sections } };
+    expect(unwrapAnswer(wrapped)).toEqual({ sections: inner.sections, feel: 'outer' });
+  });
+
+  it('wraps a bare lines array into one section', () => {
+    const lines = [{ i: 0, t: 'a' }, { i: 1, t: 'b' }, { i: 2, t: 'c' }];
+    expect(unwrapAnswer({ lines })).toEqual({ feel: undefined, sections: [{ label: undefined, lines }] });
+    expect(unwrapAnswer(lines)).toEqual({ sections: [{ lines }] });
+    expect(isOk(assembleEngineDraft(brief(), { lines }))).toBe(true);
+  });
+
+  it('refuses a payload with no line list', () => {
+    expect(unwrapAnswer({ feel: 'x' })).toBeNull();
+    expect(unwrapAnswer('text')).toBeNull();
+    const result = assembleEngineDraft(brief(), { output: 'nope' });
+    expect(isErr(result) && result.error.detail).toContain('object{output}');
   });
 });
 
