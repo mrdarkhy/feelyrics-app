@@ -156,7 +156,9 @@
     "shareButton": "Leer la canción entera",
     "suggestButton": "Proponer un verso",
     "cardButton": "Crear una tarjeta",
-    "noLines": "Esta canción todavía no tiene versos."
+    "noLines": "Esta canción todavía no tiene versos.",
+    "shareButtonShared": "Compartir esta canción",
+    "excerptSyncHint": "Abre la canción completa para reproducirla en sincronía con la música."
   },
   "player": {
     "originalLabel": "Verso original",
@@ -277,7 +279,26 @@
     "statTranslated": "Traducidas",
     "statQueued": "En la cola",
     "statWaiting": "Esperando letra",
-    "statThisWeek": "Pedidas esta semana"
+    "statThisWeek": "Pedidas esta semana",
+    "sourceLabel": "Idioma de la canción",
+    "sourceHint": "El idioma en que se canta, no el que quieres.",
+    "sourcePlaceholder": "Elige un idioma",
+    "translateNow": "Traducir ahora",
+    "submitHintNow": "Letra, idioma y destino listos: esta canción se puede traducir ahora mismo, con enlace en un minuto.",
+    "nowWorkingTitle": "{title} — {artist}",
+    "nowQueueing": "Apuntándola en la cola…",
+    "nowTranslating": "Escribiendo la versión en {language}: cada verso se lee primero literal y luego en el orden cantado; gana el que conserva el sentimiento. Después, las notas.",
+    "nowPatience": "Tarda alrededor de un minuto por idioma. Mantén esta pestaña abierta.",
+    "nowDoneTitle": "Ya está.",
+    "nowDoneBody": "La canción completa va en el enlace de abajo. Mándaselo a quien esté esperando: se abre en su móvil con cada verso y cada nota.",
+    "nowFailedTitle": "Esta vez no salió.",
+    "nowFailedBody": "El motor no pudo terminar esta canción. Tu petición sigue en la cola y se traducirá a mano.",
+    "nowExisting": "ya estaba traducida",
+    "nowOpenFull": "Abrir la canción completa",
+    "nowCopyLink": "Copiar el enlace",
+    "nowOpenPage": "Página de la canción",
+    "nowDraftNotice": "Es un borrador del motor: la revisión de un hablante nativo llega después, y la página lo dice hasta entonces. ¿Un verso que no encaja? Abre la página y propón uno mejor.",
+    "nowLeaveInQueue": "Dejarla en la cola"
   },
   "extract": {
     "title": "Dar forma a la letra",
@@ -383,7 +404,9 @@
       "invalid_transition": "Ese cambio no es posible desde aquí.",
       "quote_limit_exceeded": "Eso citaría más canción de la permitida.",
       "share_payload_invalid": "No se pudo leer ese enlace.",
-      "song_not_translated": "Esa canción todavía no tiene versos traducidos. Pega y guarda su cuerpo en la mesa de Letras primero: marcar la petición como lista borra las palabras que la acompañaban."
+      "song_not_translated": "Esa canción todavía no tiene versos traducidos. Pega y guarda su cuerpo en la mesa de Letras primero: marcar la petición como lista borra las palabras que la acompañaban.",
+      "engine_unavailable": "La traducción instantánea está desactivada ahora mismo. Tu petición se queda en la cola.",
+      "engine_failed": "El motor no pudo terminar esta canción. Prueba en un momento o déjala en la cola."
     }
   },
   "common": {
@@ -403,5 +426,34 @@
     "rights": "Las letras son de sus autores. Las traducciones y las notas se publican como comentario.",
     "builtBy": "Un proyecto paralelo, construido a la vista.",
     "sourceCode": "Código fuente"
+  },
+  "sync": {
+    "title": "En sincronía",
+    "teaser": "Alinea la canción con Spotify y la letra sigue a la voz.",
+    "open": "Sincronizar con la música",
+    "hide": "Ocultar",
+    "withTrack": "La pista está alineada. Pulsa play en el reproductor y los versos la siguen; si aún no se mueven, toca una vez por verso para capturar el tiempo.",
+    "withoutTrack": "Pega el enlace de Spotify de la canción, o pulsa play donde la escuches y toca cada verso al cantarse.",
+    "linkLabel": "Enlace de Spotify",
+    "linkHint": "En Spotify: Compartir → Copiar enlace. Vale cualquier enlace de pista.",
+    "linkSubmit": "Alinear",
+    "linkInvalid": "Eso no parece un enlace de pista de Spotify.",
+    "embedLoading": "Cargando el reproductor…",
+    "embedFailed": "El reproductor de Spotify no se pudo cargar aquí. Reproduce la canción en tu app y usa los toques.",
+    "previewNote": "Sin Spotify Premium el reproductor incrustado toca un avance de 30 segundos; con Premium, la pista entera.",
+    "changeTrack": "Cambiar pista",
+    "startTap": "Sincronizar a toques",
+    "retap": "Repetir los toques",
+    "tapLine": "Toca — verso {n} de {total}",
+    "tapFinish": "Terminar aquí",
+    "playSynced": "Reproducir en sincronía",
+    "playFollow": "Seguir la pista",
+    "stop": "Parar",
+    "clear": "Borrar tiempos",
+    "tapHintTrack": "Reproduce la pista de arriba y toca el botón (o Espacio) cuando se cante cada verso.",
+    "tapHintClock": "Diste play en tu altavoz y aquí en el mismo instante; ahora toca el botón (o Espacio) cuando se cante cada verso.",
+    "readyHintTrack": "Tiempos capturados. Reproduce la pista y los versos la siguen. Los tiempos viajan dentro del enlace.",
+    "readyHintClock": "Tiempos capturados. Pulsa play en tu altavoz y «Reproducir en sincronía» a la vez. Los tiempos viajan dentro del enlace.",
+    "idleHint": "Aún no hay tiempos. Sincronizar a toques lleva una escucha."
   }
 }

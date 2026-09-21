@@ -52,7 +52,11 @@ export type DomainErrorCode =
   | 'invalid_transition'
   | 'song_not_translated'
   | 'quote_limit_exceeded'
-  | 'share_payload_invalid';
+  | 'share_payload_invalid'
+  /** No transcreation engine is configured on this deployment. */
+  | 'engine_unavailable'
+  /** The engine answered, but not with a usable body. */
+  | 'engine_failed';
 
 export interface DomainError {
   readonly code: DomainErrorCode;

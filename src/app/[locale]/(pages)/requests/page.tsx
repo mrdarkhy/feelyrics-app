@@ -14,6 +14,13 @@ import { RequestQueue } from '@/components/requests/request-queue';
  */
 export const dynamic = 'force-dynamic';
 
+/**
+ * "Translate now" runs the engine inside a server action called from this
+ * page, and a whole song takes longer than the default function budget. The
+ * ceiling is per target, because the form sends one language per call.
+ */
+export const maxDuration = 120;
+
 export async function generateMetadata({
   params,
 }: {

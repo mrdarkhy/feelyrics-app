@@ -100,6 +100,9 @@ export interface SharedSongView {
   readonly feelProfile: string | null;
   readonly requestedBy: string | null;
   readonly sections: readonly SectionView[];
+  /** Sync data the sender attached, so the song can play in time here too. */
+  readonly spotifyTrackId: string | null;
+  readonly timings: readonly number[] | null;
 }
 
 export function toSharedSongView(song: SharedSong): SharedSongView {
@@ -111,6 +114,8 @@ export function toSharedSongView(song: SharedSong): SharedSongView {
     engineVersion: song.engineVersion,
     feelProfile: song.feelProfile,
     requestedBy: song.requestedBy,
+    spotifyTrackId: song.sync.spotifyTrackId,
+    timings: song.sync.timings,
     sections: song.sections.map((section) => ({
       id: section.id,
       label: section.label,

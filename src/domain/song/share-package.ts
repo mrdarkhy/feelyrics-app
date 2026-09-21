@@ -62,6 +62,30 @@ export interface SharePackage {
   /** requested-by credit, omitted when absent */
   readonly by?: string;
   readonly sections: readonly SharePackageSection[];
+  /** Spotify track id the sender synced against, omitted when absent */
+  readonly sp?: string;
+  /** tap-sync timings, one millisecond offset per line in reading order */
+  readonly tm?: readonly number[];
+}
+
+/** What a sender can attach so the song plays in time on the reader's device. */
+export interface SyncData {
+  readonly spotifyTrackId: string | null;
+  readonly timings: readonly number[] | null;
+}
+
+const SPOTIFY_ID = /^[A-Za-z0-9]{22}$/;
+export const MAX_TIMINGS = 400;
+
+/** Returns a copy of the package carrying the sync data, dropping what is invalid. */
+export function withSyncData(pkg: SharePackage, sync: SyncData): SharePackage {
+  const { sp: _sp, tm: _tm, ...rest } = pkg;
+  const sp = sync.spotifyTrackId && SPOTIFY_ID.test(sync.spotifyTrackId) ? sync.spotifyTrackId : null;
+  const tm =
+    sync.timings && sync.timings.length > 0 && sync.timings.length <= MAX_TIMINGS
+      ? sync.timings.map((ms) => Math.max(0, Math.round(ms)))
+      : null;
+  return { ...rest, ...(sp ? { sp } : {}), ...(tm ? { tm } : {}) };
 }
 
 export function toSharePackage(song: Song): SharePackage {
@@ -98,6 +122,7 @@ export interface SharedSong {
   readonly feelProfile: string | null;
   readonly requestedBy: string | null;
   readonly sections: readonly Section[];
+  readonly sync: SyncData;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -186,5 +211,12 @@ export function fromSharePackage(input: unknown): Result<SharedSong> {
     feelProfile: typeof input.feel === 'string' ? input.feel.slice(0, 600) : null,
     requestedBy: typeof input.by === 'string' ? input.by.slice(0, 120) : null,
     sections,
+    sync: {
+      spotifyTrackId: typeof input.sp === 'string' && SPOTIFY_ID.test(input.sp) ? input.sp : null,
+      timings:
+        Array.isArray(input.tm) && input.tm.length > 0 && input.tm.length <= MAX_TIMINGS
+          ? input.tm.map((ms) => (typeof ms === 'number' && Number.isFinite(ms) ? Math.max(0, ms) : 0))
+          : null,
+    },
   });
 }

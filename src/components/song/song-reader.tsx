@@ -6,7 +6,12 @@ import * as TogglePrimitive from '@radix-ui/react-toggle-group';
 import { toBcp47 } from '@/domain/shared/language';
 import type { SongView, SharedSongView, LineView } from '@/lib/view-models';
 import { saveOwnRendering, useOwnRenderings } from '@/lib/own-renderings';
+import { useSyncData } from '@/lib/sync-store';
+import { decodeSharePackage, encodeSharePackage } from '@/lib/share-link';
+import { toSharePackage, withSyncData } from '@/domain/song/share-package';
+import type { SyncData } from '@/domain/song/share-package';
 import { LineRow } from './line-row';
+import { SyncPanel } from './sync-panel';
 import { ShareDialog } from './share-dialog';
 import { SuggestDialog } from './suggest-dialog';
 import { Button } from '@/components/ui/button';
@@ -30,6 +35,8 @@ interface SongReaderProps {
   /** Absent for songs opened from a share link: they are not on this site. */
   songId?: string;
   shareUrl?: string;
+  /** Label for the share button; the shared page reads "share", the catalogue page "read the whole song". */
+  shareLabel?: string;
   canSuggest?: boolean;
 }
 
@@ -37,6 +44,7 @@ export function SongReader({
   song,
   songId,
   shareUrl,
+  shareLabel,
   canSuggest = false,
 }: SongReaderProps) {
   const t = useTranslations('song');
@@ -53,6 +61,52 @@ export function SongReader({
   // external to React, so reading them through the store keeps the server
   // render (always empty) and the client render honest about each other.
   const ownRenderings = useOwnRenderings(songId);
+
+  // Sync data: the device's copy wins over what the link carried, because the
+  // reader may have re-tapped a song they were sent.
+  const syncKey = songId ?? `shared:${song.source}-${song.target}:${song.artist}|${song.title}`;
+  const stored = useSyncData(syncKey);
+  const linked: SyncData | null =
+    'spotifyTrackId' in song ? { spotifyTrackId: song.spotifyTrackId, timings: song.timings } : null;
+  const linkedTrack = linked?.spotifyTrackId ?? null;
+  const linkedTimings = linked?.timings ?? null;
+  const sync = React.useMemo<SyncData>(
+    () => ({
+      spotifyTrackId: stored.spotifyTrackId ?? linkedTrack,
+      timings: stored.timings ?? linkedTimings,
+    }),
+    [stored.spotifyTrackId, stored.timings, linkedTrack, linkedTimings],
+  );
+  const [activeIndex, setActiveIndex] = React.useState<number | null>(null);
+
+  // The share link is built on the server from the catalogue; sync data lives
+  // on this device, so it is folded into the link here, in the browser.
+  const effectiveShareUrl = React.useMemo(() => {
+    if (!shareUrl || (!sync.spotifyTrackId && !sync.timings)) return shareUrl;
+    const decoded = decodeSharePackage(shareUrl);
+    if (!decoded.ok) return shareUrl;
+    const shared = decoded.value;
+    const pkg = withSyncData(
+      toSharePackage({
+        id: '',
+        slug: '',
+        title: shared.title,
+        artist: shared.artist,
+        pair: shared.pair,
+        engineVersion: shared.engineVersion,
+        feelProfile: shared.feelProfile,
+        provenance: 'user-paste',
+        sections: shared.sections,
+        requestedBy: shared.requestedBy,
+        validatedBy: null,
+        createdAt: new Date(0),
+        updatedAt: new Date(0),
+      }),
+      sync,
+    );
+    const encoded = encodeSharePackage(pkg);
+    return encoded.ok ? `${shareUrl.split('#')[0]}#${encoded.value}` : shareUrl;
+  }, [shareUrl, sync]);
 
   const handleAccepted = React.useCallback(
     (lineId: string, rendering: string) => {
@@ -104,7 +158,7 @@ export function SongReader({
           <div className="flex flex-wrap items-center gap-2">
             {shareUrl ? (
               <Button variant="ghost" size="sm" onClick={() => setShareOpen(true)}>
-                {t('shareButton')}
+                {shareLabel ?? t('shareButton')}
               </Button>
             ) : null}
             {canSuggest && songId ? (
@@ -138,7 +192,8 @@ export function SongReader({
             {t('excerptNotice', {
               shown: song.shownLineCount,
               total: song.totalLineCount,
-            })}
+            })}{' '}
+            {shareUrl ? <span className="text-feel">{t('excerptSyncHint')}</span> : null}
           </p>
         ) : null}
 
@@ -186,13 +241,22 @@ export function SongReader({
             {tSuggest('modeOn')}
           </p>
         ) : null}
+
+        {totalLines > 0 && !isTruncated ? (
+          <SyncPanel
+            songKey={syncKey}
+            sync={sync}
+            lineCount={totalLines}
+            onActiveIndex={setActiveIndex}
+          />
+        ) : null}
       </header>
 
       {totalLines === 0 ? (
         <p className="text-[15px] text-bone-muted">{t('noLines')}</p>
       ) : (
         <div className="space-y-8">
-          {song.sections.map((section) => (
+          {song.sections.map((section, sectionIndex) => (
             <section key={section.id} aria-labelledby={`section-${section.id}`}>
               {section.label ? (
                 <h2
@@ -209,10 +273,11 @@ export function SongReader({
               )}
 
               <ul className={cn('fl-stagger space-y-4', suggestMode && 'space-y-2')}>
-                {section.lines.map((line) => (
+                {section.lines.map((line, lineIndex) => (
                   <LineRow
                     key={line.id}
                     line={line}
+                    active={activeIndex !== null && flatIndex(song, sectionIndex, lineIndex) === activeIndex}
                     source={song.source}
                     target={song.target}
                     translationFirst={translationFirst}
@@ -232,8 +297,8 @@ export function SongReader({
         </div>
       )}
 
-      {shareUrl ? (
-        <ShareDialog url={shareUrl} open={shareOpen} onOpenChange={setShareOpen} />
+      {effectiveShareUrl ? (
+        <ShareDialog url={effectiveShareUrl} open={shareOpen} onOpenChange={setShareOpen} />
       ) : null}
 
       {songId ? (
@@ -251,4 +316,15 @@ export function SongReader({
       ) : null}
     </article>
   );
+}
+
+/** Position of a line in reading order across sections — what the timings index. */
+function flatIndex(
+  song: Pick<SongView, 'sections'>,
+  sectionIndex: number,
+  lineIndex: number,
+): number {
+  let offset = 0;
+  for (let i = 0; i < sectionIndex; i += 1) offset += song.sections[i]?.lines.length ?? 0;
+  return offset + lineIndex;
 }

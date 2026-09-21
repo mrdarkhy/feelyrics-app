@@ -19,6 +19,8 @@ export interface LineRowProps {
   /** Present when the line can be suggested on. */
   onSuggest?: (line: LineView) => void;
   suggestLabel?: string;
+  /** The line being sung right now, when the song is playing in sync. */
+  active?: boolean;
 }
 
 /**
@@ -40,9 +42,17 @@ export const LineRow = React.memo(function LineRow({
   ownRendering,
   onSuggest,
   suggestLabel,
+  active = false,
 }: LineRowProps) {
   const t = useTranslations('player');
   const tTags = useTranslations('tags');
+  const ref = React.useRef<HTMLLIElement>(null);
+
+  // The sung line stays in view without the reader scrolling: centred, and
+  // only when it changes, so a paused song does not keep tugging the page.
+  React.useEffect(() => {
+    if (active) ref.current?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  }, [active]);
 
   const rendering = ownRendering ?? line.rendering;
   const primary = translationFirst ? rendering : line.original;
@@ -93,7 +103,7 @@ export const LineRow = React.memo(function LineRow({
 
   if (onSuggest) {
     return (
-      <li data-lyric-line={line.id}>
+      <li ref={ref} data-lyric-line={line.id} data-active={active || undefined}>
         <button
           type="button"
           onClick={() => onSuggest(line)}
@@ -101,6 +111,7 @@ export const LineRow = React.memo(function LineRow({
           className={cn(
             'w-full rounded-xl border border-transparent p-3 text-left transition-colors',
             'hover:border-amber/40 hover:bg-amber-soft/40',
+            active && 'border-feel/50 bg-feel-soft/50',
           )}
         >
           {body}
@@ -110,7 +121,15 @@ export const LineRow = React.memo(function LineRow({
   }
 
   return (
-    <li data-lyric-line={line.id} className="p-3">
+    <li
+      ref={ref}
+      data-lyric-line={line.id}
+      data-active={active || undefined}
+      className={cn(
+        'rounded-xl border border-transparent p-3 transition-colors duration-300',
+        active && 'border-feel/50 bg-feel-soft/50',
+      )}
+    >
       {body}
     </li>
   );

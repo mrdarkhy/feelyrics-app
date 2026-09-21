@@ -156,7 +156,9 @@
     "shareButton": "Şarkının tamamını oku",
     "suggestButton": "Satır öner",
     "cardButton": "Kart üret",
-    "noLines": "Bu şarkının henüz satırı yok."
+    "noLines": "Bu şarkının henüz satırı yok.",
+    "shareButtonShared": "Bu şarkıyı paylaş",
+    "excerptSyncHint": "Müzikle eşli dinlemek için şarkının tamamını aç."
   },
   "player": {
     "originalLabel": "Orijinal satır",
@@ -277,7 +279,26 @@
     "statTranslated": "Çevrildi",
     "statQueued": "Kuyrukta",
     "statWaiting": "Söz bekliyor",
-    "statThisWeek": "Bu hafta istenen"
+    "statThisWeek": "Bu hafta istenen",
+    "sourceLabel": "Şarkının dili",
+    "sourceHint": "Söylendiği dil — istediğin dil değil.",
+    "sourcePlaceholder": "Dil seç",
+    "translateNow": "Şimdi çevir",
+    "submitHintNow": "Sözler, dil ve hedef hazır — bu şarkı hemen çevrilebilir, link yaklaşık bir dakikada gelir.",
+    "nowWorkingTitle": "{title} — {artist}",
+    "nowQueueing": "Sıraya yazılıyor…",
+    "nowTranslating": "{language} sürümü yazılıyor: her satır önce düz, sonra söyleniş sırasıyla okunuyor; hissi koruyan kazanıyor. Sonra notlar.",
+    "nowPatience": "Dil başına yaklaşık bir dakika sürer. Bu sekmeyi açık tut.",
+    "nowDoneTitle": "Oturdu.",
+    "nowDoneBody": "Şarkının tamamı aşağıdaki linkte. Bekleyen kimse ona gönder — telefonunda her satır ve her notla açılır.",
+    "nowFailedTitle": "Bu sefer olmadı.",
+    "nowFailedBody": "Motor bu şarkıyı bitiremedi. İsteğin sırada duruyor; elle çevrilecek.",
+    "nowExisting": "zaten çevrilmişti",
+    "nowOpenFull": "Şarkının tamamını aç",
+    "nowCopyLink": "Linki kopyala",
+    "nowOpenPage": "Şarkı sayfası",
+    "nowDraftNotice": "Bu bir motor taslağı — ana dili konuşan birinin his kontrolü sonra gelir, sayfa o zamana kadar bunu söyler. Yanlış oturan bir satır gördüysen şarkı sayfasını açıp daha iyisini öner.",
+    "nowLeaveInQueue": "Sırada bıraksın"
   },
   "extract": {
     "title": "Sözleri yapılandır",
@@ -383,7 +404,9 @@
       "invalid_transition": "Bu değişiklik buradan mümkün değil.",
       "quote_limit_exceeded": "Bu, şarkıdan izin verilenden fazlasını alıntılar.",
       "share_payload_invalid": "Bu link okunamadı.",
-      "song_not_translated": "Bu şarkının henüz çevrilmiş satırı yok. Önce Sözler masasında gövdesini yapıştırıp kaydet — isteği hazır işaretlemek, onunla gelen sözleri siler."
+      "song_not_translated": "Bu şarkının henüz çevrilmiş satırı yok. Önce Sözler masasında gövdesini yapıştırıp kaydet — isteği hazır işaretlemek, onunla gelen sözleri siler.",
+      "engine_unavailable": "Anında çeviri bu sitede şu an kapalı. İsteğin sırada kalıyor.",
+      "engine_failed": "Motor bu şarkıyı bitiremedi. Biraz sonra tekrar dene ya da sırada bırak."
     }
   },
   "common": {
@@ -403,5 +426,34 @@
     "rights": "Sözler sahiplerinindir. Çeviriler ve notlar yorum olarak yayımlanır.",
     "builtBy": "Açıkta geliştirilen bir yan proje.",
     "sourceCode": "Kaynak kod"
+  },
+  "sync": {
+    "title": "Müzikle birlikte",
+    "teaser": "Şarkıyı Spotify ile hizala, sözler şarkıcıyı izlesin.",
+    "open": "Müzikle eşle",
+    "hide": "Gizle",
+    "withTrack": "Parça hizalandı. Oynatıcıda play'e bas, satırlar takip eder; şarkı henüz ilerlemiyorsa zamanlamayı yakalamak için her satırda bir kez dokun.",
+    "withoutTrack": "Şarkının Spotify linkini yapıştır ya da dinlediğin yerde play'e basıp her satır söylenirken dokun.",
+    "linkLabel": "Spotify linki",
+    "linkHint": "Spotify'da: Paylaş → Bağlantıyı kopyala. Herhangi bir parça linki olur.",
+    "linkSubmit": "Hizala",
+    "linkInvalid": "Bu bir Spotify parça linkine benzemiyor.",
+    "embedLoading": "Oynatıcı yükleniyor…",
+    "embedFailed": "Spotify oynatıcısı burada yüklenemedi. Şarkıyı kendi uygulamanda çal, dokunuşlarla eşle.",
+    "previewNote": "Spotify Premium yoksa gömülü oynatıcı 30 saniyelik önizleme çalar; Premium'da parçanın tamamı.",
+    "changeTrack": "Parçayı değiştir",
+    "startTap": "Dokunarak eşle",
+    "retap": "Zamanlamayı yeniden al",
+    "tapLine": "Dokun — {n}/{total}. satır",
+    "tapFinish": "Burada bitir",
+    "playSynced": "Eşli çal",
+    "playFollow": "Parçayı izle",
+    "stop": "Durdur",
+    "clear": "Zamanlamayı sil",
+    "tapHintTrack": "Yukarıdaki parçayı çal ve her satır söylenirken düğmeye (ya da Boşluk'a) dokun.",
+    "tapHintClock": "Hoparlörde play'e bastığın anda başlattın; şimdi her satır söylenirken düğmeye (ya da Boşluk'a) dokun.",
+    "readyHintTrack": "Zamanlama alındı. Parçayı çal, satırlar takip eder. Zamanlama paylaşım linkinin içinde gider.",
+    "readyHintClock": "Zamanlama alındı. Hoparlörde play'e ve burada “Eşli çal”a aynı anda bas. Zamanlama paylaşım linkinin içinde gider.",
+    "idleHint": "Henüz zamanlama yok. Dokunarak eşleme tek dinleyişte biter."
   }
 }

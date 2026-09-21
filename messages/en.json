@@ -156,7 +156,9 @@
     "shareButton": "Read the whole song",
     "suggestButton": "Suggest a line",
     "cardButton": "Make a card",
-    "noLines": "This song has no lines yet."
+    "noLines": "This song has no lines yet.",
+    "shareButtonShared": "Share this song",
+    "excerptSyncHint": "Open the whole song to play it in sync with the music."
   },
   "player": {
     "originalLabel": "Original line",
@@ -277,7 +279,26 @@
     "statTranslated": "Translated",
     "statQueued": "In the queue",
     "statWaiting": "Waiting on words",
-    "statThisWeek": "Asked this week"
+    "statThisWeek": "Asked this week",
+    "sourceLabel": "The song's language",
+    "sourceHint": "The language it is sung in — not the one you want.",
+    "sourcePlaceholder": "Pick a language",
+    "translateNow": "Translate now",
+    "submitHintNow": "Words, language and target are in — this one can be translated right now, with a link in about a minute.",
+    "nowWorkingTitle": "{title} — {artist}",
+    "nowQueueing": "Putting it on the board…",
+    "nowTranslating": "Writing the {language} version: every line gets a literal reading and a sung-order reading, and the one that keeps the feeling wins. Then the notes.",
+    "nowPatience": "This takes about a minute per language. Keep this tab open.",
+    "nowDoneTitle": "It landed.",
+    "nowDoneBody": "The whole song is in the link below. Send it to whoever is waiting — it opens on their phone with every line and every note.",
+    "nowFailedTitle": "That did not go through.",
+    "nowFailedBody": "The engine could not finish this one. Your request is still on the board, and it will be translated by hand.",
+    "nowExisting": "already translated",
+    "nowOpenFull": "Open the whole song",
+    "nowCopyLink": "Copy the link",
+    "nowOpenPage": "Song page",
+    "nowDraftNotice": "This is an engine draft — a feel-check by a native speaker comes later, and the page says so until then. Spotted a line that misses? Open the song page and suggest a better one.",
+    "nowLeaveInQueue": "Leave it in the queue"
   },
   "extract": {
     "title": "Structure the lyrics",
@@ -383,7 +404,9 @@
       "invalid_transition": "That change is not possible from here.",
       "quote_limit_exceeded": "That would quote more of the song than is allowed.",
       "share_payload_invalid": "That link could not be read.",
-      "song_not_translated": "That song has no translated lines yet. Paste and save its body in the Lyrics desk first — marking the request ready deletes the words it came with."
+      "song_not_translated": "That song has no translated lines yet. Paste and save its body in the Lyrics desk first — marking the request ready deletes the words it came with.",
+      "engine_unavailable": "Instant translation is switched off on this site right now. Your request stays in the queue.",
+      "engine_failed": "The engine could not finish this song. Try again in a moment, or leave it in the queue."
     }
   },
   "common": {
@@ -403,5 +426,34 @@
     "rights": "Lyrics belong to their authors. Translations and notes are published as commentary.",
     "builtBy": "A side project, built in the open.",
     "sourceCode": "Source code"
+  },
+  "sync": {
+    "title": "Play it in sync",
+    "teaser": "Line up the song with Spotify and the words follow the singer.",
+    "open": "Sync with the music",
+    "hide": "Hide",
+    "withTrack": "The track is lined up. Press play in the player and the lines follow; tap once per line to capture the timing if the song does not move yet.",
+    "withoutTrack": "Paste the song's Spotify link, or press play wherever you are listening and tap each line as it is sung.",
+    "linkLabel": "Spotify link",
+    "linkHint": "From Spotify: Share → Copy link. Any track link works.",
+    "linkSubmit": "Line it up",
+    "linkInvalid": "That does not look like a Spotify track link.",
+    "embedLoading": "Loading the player…",
+    "embedFailed": "The Spotify player could not load here. Play the song in your own app and use the taps instead.",
+    "previewNote": "Without Spotify Premium the embedded player plays a 30-second preview; with Premium, the whole track.",
+    "changeTrack": "Change track",
+    "startTap": "Start tap-sync",
+    "retap": "Re-tap the timing",
+    "tapLine": "Tap — line {n} of {total}",
+    "tapFinish": "Finish here",
+    "playSynced": "Play in sync",
+    "playFollow": "Follow the track",
+    "stop": "Stop",
+    "clear": "Clear timing",
+    "tapHintTrack": "Play the track above and tap the button (or Space) as each line is sung.",
+    "tapHintClock": "Press play on your speaker and tapped the start at the same moment; now tap the button (or Space) as each line is sung.",
+    "readyHintTrack": "Timing captured. Play the track and the lines follow. The timing travels inside the share link.",
+    "readyHintClock": "Timing captured. Press play on your speaker and “Play in sync” at the same moment. The timing travels inside the share link.",
+    "idleHint": "Nothing captured yet. Tap-sync takes one listen."
   }
 }

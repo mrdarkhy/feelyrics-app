@@ -4,6 +4,8 @@ import { DrizzleSongRepository } from './db/repositories/song.repository';
 import { DrizzleRequestRepository } from './db/repositories/request.repository';
 import { DrizzleSuggestionRepository } from './db/repositories/suggestion.repository';
 import { PostgresRateLimiter } from './db/repositories/rate-limiter';
+import { engineFromEnv } from './engine/anthropic-engine';
+import type { TranscreationEngine } from '@/application/ports/engine';
 import { systemClock } from '@/application/ports/repositories';
 import type {
   Clock,
@@ -30,6 +32,8 @@ export interface Container {
   readonly suggestions: SuggestionRepository;
   readonly rateLimiter: RateLimiter;
   readonly clock: Clock;
+  /** Null when no API key is configured — "Translate now" then reports engine_unavailable. */
+  readonly engine: TranscreationEngine | null;
 }
 
 let cached: Container | null = null;
@@ -45,6 +49,7 @@ export function getContainer(): Container {
     suggestions: new DrizzleSuggestionRepository(db),
     rateLimiter: new PostgresRateLimiter(db),
     clock: systemClock,
+    engine: engineFromEnv(),
   };
 
   return cached;

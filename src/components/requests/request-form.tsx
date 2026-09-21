@@ -1,11 +1,14 @@
 'use client';
 
 import * as React from 'react';
-import { useTranslations } from 'next-intl';
-import { useRouter } from '@/i18n/navigation';
-import { TARGET_LANGUAGES } from '@/domain/shared/language';
+import { useLocale, useTranslations } from 'next-intl';
+import { Link, useRouter } from '@/i18n/navigation';
+import { LANGUAGE_CODES, TARGET_LANGUAGES } from '@/domain/shared/language';
 import { MAX_REQUESTER_NOTE_LENGTH } from '@/domain/request/song-request';
 import { submitRequestAction } from '@/actions/requests';
+import { translateNowAction } from '@/actions/translate';
+import type { TranslateNowOutput } from '@/actions/translate';
+import { cn } from '@/lib/cn';
 import { Button } from '@/components/ui/button';
 import { Chip, ChipGroup } from '@/components/ui/chip';
 import {
@@ -43,12 +46,27 @@ interface Done {
   lineCount: number;
 }
 
+/**
+ * Where "Translate now" is up to, one target at a time.
+ *
+ * Each target is its own server call, so a two-language request is two waits —
+ * and the screen says which one is running rather than spinning in silence for
+ * a minute.
+ */
+interface NowState {
+  phase: 'queueing' | 'translating' | 'done';
+  current: string | null;
+  results: TranslateNowOutput[];
+  failed: { target: string; code: string }[];
+}
+
 export function RequestForm({ queuedCount }: { queuedCount: number }) {
   const t = useTranslations('requests');
   const tLang = useTranslations('languages');
   const tErrors = useTranslations('errors.codes');
   const tCommon = useTranslations('common');
   const router = useRouter();
+  const locale = useLocale();
 
   const [title, setTitle] = React.useState('');
   const [artist, setArtist] = React.useState('');
@@ -56,6 +74,8 @@ export function RequestForm({ queuedCount }: { queuedCount: number }) {
   const [alias, setAlias] = React.useState('');
   const [note, setNote] = React.useState('');
   const [lyrics, setLyrics] = React.useState('');
+  const [source, setSource] = React.useState('');
+  const [now, setNow] = React.useState<NowState | null>(null);
 
   const [structure, setStructure] = React.useState<Structure | null>(null);
   const [checking, setChecking] = React.useState(false);
@@ -132,9 +152,78 @@ export function RequestForm({ queuedCount }: { queuedCount: number }) {
     setTargets([]);
     setNote('');
     setLyrics('');
+    setSource('');
     setStructure(null);
     setDone(null);
+    setNow(null);
     checkedRef.current = '';
+  }
+
+  const canTranslateNow =
+    lyrics.trim().length > 0 && source.length > 0 && targets.some((t) => t !== source);
+
+  /**
+   * The fast path: queue the request (so the name lands on the board), then
+   * translate each target in turn and finish with the links in hand.
+   */
+  function handleTranslateNow() {
+    setFieldErrors({});
+    if (targets.length === 0) {
+      setFieldErrors({ targets: tErrors('unsupported_language') });
+      return;
+    }
+    if (source.length === 0) {
+      setFieldErrors({ source: tErrors('unsupported_language') });
+      return;
+    }
+    const wanted = targets.filter((t) => t !== source);
+    if (wanted.length === 0) {
+      setFieldErrors({ source: tErrors('unsupported_language') });
+      return;
+    }
+
+    setNow({ phase: 'queueing', current: null, results: [], failed: [] });
+
+    startTransition(async () => {
+      const queued = await submitRequestAction({
+        title,
+        artist,
+        targets: wanted,
+        requesterAlias: alias || null,
+        requesterNote: note || null,
+        lyrics: lyrics.trim(),
+      });
+
+      if (!queued.ok) {
+        setNow(null);
+        setFieldErrors({ [queued.field ?? 'title']: tErrors(queued.code) });
+        return;
+      }
+
+      const results: TranslateNowOutput[] = [];
+      const failed: { target: string; code: string }[] = [];
+
+      for (const [index, target] of wanted.entries()) {
+        setNow({ phase: 'translating', current: target, results: [...results], failed: [...failed] });
+        const result = await translateNowAction({
+          title,
+          artist,
+          source,
+          target,
+          lyrics: lyrics.trim(),
+          requesterAlias: alias || null,
+          requesterNote: note || null,
+          requestId: queued.data.id,
+          closeRequest: index === wanted.length - 1,
+          locale,
+        });
+        if (result.ok) results.push(result.data);
+        else failed.push({ target, code: result.code });
+      }
+
+      setNow({ phase: 'done', current: null, results, failed });
+      router.refresh();
+    });
   }
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -164,6 +253,21 @@ export function RequestForm({ queuedCount }: { queuedCount: number }) {
       setDone({ duplicate: result.data.duplicate, lineCount: result.data.lineCount });
       router.refresh();
     });
+  }
+
+  if (now) {
+    return (
+      <TranslateNowPanel
+        state={now}
+        title={title}
+        artist={artist}
+        onReset={reset}
+        onQueueOnly={() => {
+          setNow(null);
+          setDone({ duplicate: false, lineCount: structure?.lines ?? 0 });
+        }}
+      />
+    );
   }
 
   if (done) {
@@ -277,6 +381,12 @@ export function RequestForm({ queuedCount }: { queuedCount: number }) {
         </Field>
       </div>
 
+      <Field error={fieldErrors.source}>
+        <FieldLabel>{t('sourceLabel')}</FieldLabel>
+        <FieldHint>{t('sourceHint')}</FieldHint>
+        <SourceSelect value={source} onChange={setSource} placeholder={t('sourcePlaceholder')} />
+      </Field>
+
       <Field error={fieldErrors.targets}>
         <FieldLabel>{t('targetsLabel')}</FieldLabel>
         <FieldHint>{t('targetsHint')}</FieldHint>
@@ -317,13 +427,176 @@ export function RequestForm({ queuedCount }: { queuedCount: number }) {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-[13px] text-olive">
           {lyrics.trim().length > 0
-            ? t('submitHintWithLyrics')
+            ? canTranslateNow
+              ? t('submitHintNow')
+              : t('submitHintWithLyrics')
             : t('submitHintWithoutLyrics', { count: queuedCount })}
         </p>
-        <Button type="submit" variant="primary" loading={pending}>
-          {pending ? t('submitting') : t('submit')}
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button type="submit" variant={canTranslateNow ? 'secondary' : 'primary'} loading={pending}>
+            {pending ? t('submitting') : t('submit')}
+          </Button>
+          {lyrics.trim().length > 0 ? (
+            <Button
+              type="button"
+              variant="primary"
+              disabled={!canTranslateNow || pending}
+              onClick={handleTranslateNow}
+            >
+              {t('translateNow')}
+            </Button>
+          ) : null}
+        </div>
       </div>
     </form>
+  );
+}
+
+function SourceSelect({
+  value,
+  onChange,
+  placeholder,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  placeholder: string;
+}) {
+  const tLang = useTranslations('languages');
+  return (
+    <select
+      value={value}
+      onChange={(event) => onChange(event.target.value)}
+      className={cn(
+        'w-full rounded-xl border border-line bg-ground-raised px-3 py-2.5',
+        'font-sans text-[15px] text-bone focus:border-amber/60 focus:outline-none',
+        value.length === 0 && 'text-olive/70',
+      )}
+    >
+      <option value="">{placeholder}</option>
+      {LANGUAGE_CODES.map((code) => (
+        <option key={code} value={code}>
+          {tLang(code)}
+        </option>
+      ))}
+    </select>
+  );
+}
+
+/**
+ * The fast path's screen: first the wait, then the links.
+ *
+ * The wait is narrated per target because it is long enough to doubt — a
+ * minute of spinner reads as broken; "Turkish version, 40 lines, writing the
+ * notes" reads as work. The result puts the full-song link first: it is the
+ * thing the person came for, and the one they will send to whoever is waiting.
+ */
+function TranslateNowPanel({
+  state,
+  title,
+  artist,
+  onReset,
+  onQueueOnly,
+}: {
+  state: NowState;
+  title: string;
+  artist: string;
+  onReset: () => void;
+  onQueueOnly: () => void;
+}) {
+  const t = useTranslations('requests');
+  const tLang = useTranslations('languages');
+  const tErrors = useTranslations('errors.codes');
+  const tShare = useTranslations('share');
+  const [copied, setCopied] = React.useState<string | null>(null);
+
+  async function copy(url: string) {
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(url);
+    } catch {
+      setCopied(null);
+    }
+  }
+
+  if (state.phase !== 'done') {
+    return (
+      <div className="fl-surface fl-enter space-y-4 p-6" role="status" aria-live="polite">
+        <h2 className="font-display text-xl font-extrabold text-bone">
+          {t('nowWorkingTitle', { title, artist })}
+        </h2>
+        <p className="text-[15px] leading-relaxed text-bone-muted">
+          {state.phase === 'queueing'
+            ? t('nowQueueing')
+            : t('nowTranslating', { language: tLang(state.current ?? 'en') })}
+        </p>
+        <div className="h-1.5 w-full overflow-hidden rounded-pill bg-ground-raised">
+          <div className="fl-progress h-full w-1/3 rounded-pill bg-amber" />
+        </div>
+        <p className="text-[13px] text-olive">{t('nowPatience')}</p>
+      </div>
+    );
+  }
+
+  const allFailed = state.results.length === 0;
+
+  return (
+    <div className="fl-surface fl-enter space-y-5 p-6">
+      <div className="space-y-2">
+        <h2 className="font-display text-xl font-extrabold text-bone">
+          {allFailed ? t('nowFailedTitle') : t('nowDoneTitle')}
+        </h2>
+        <p className="text-[15px] leading-relaxed text-bone-muted">
+          {allFailed ? t('nowFailedBody') : t('nowDoneBody')}
+        </p>
+      </div>
+
+      <ul className="space-y-3">
+        {state.results.map((result) => (
+          <li key={result.slug} className="rounded-card border border-line bg-panel p-4">
+            <p className="text-[11px] font-semibold uppercase tracking-widest text-feel">
+              {tLang(result.target)} · {t('linesReady', { count: result.lineCount })}
+              {result.existing ? ` · ${t('nowExisting')}` : ''}
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {result.shareUrl ? (
+                <Button asChild variant="primary" size="sm">
+                  <a href={result.shareUrl}>{t('nowOpenFull')}</a>
+                </Button>
+              ) : null}
+              {result.shareUrl ? (
+                <Button variant="secondary" size="sm" onClick={() => copy(result.shareUrl ?? '')}>
+                  {copied === result.shareUrl ? tShare('copied') : t('nowCopyLink')}
+                </Button>
+              ) : null}
+              <Button asChild variant="ghost" size="sm">
+                <Link href={`/songs/${result.slug}`}>{t('nowOpenPage')}</Link>
+              </Button>
+            </div>
+          </li>
+        ))}
+        {state.failed.map((failure) => (
+          <li
+            key={failure.target}
+            className="rounded-card border border-danger/40 bg-panel p-4 text-[14px] text-bone-muted"
+          >
+            <span className="font-semibold text-bone">{tLang(failure.target)}:</span>{' '}
+            {tErrors(failure.code)}
+          </li>
+        ))}
+      </ul>
+
+      <p className="text-[13px] leading-relaxed text-olive">{t('nowDraftNotice')}</p>
+
+      <div className="flex flex-wrap gap-3">
+        <Button variant="secondary" size="sm" onClick={onReset}>
+          {t('doneAnother')}
+        </Button>
+        {allFailed ? (
+          <Button variant="ghost" size="sm" onClick={onQueueOnly}>
+            {t('nowLeaveInQueue')}
+          </Button>
+        ) : null}
+      </div>
+    </div>
   );
 }

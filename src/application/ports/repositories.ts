@@ -91,6 +91,9 @@ export interface SongRepository {
   /** Creates an empty song. Returns null when the slug is already taken. */
   create(input: NewSong): Promise<Song | null>;
 
+  /** Sets the one-line feel profile, e.g. once an engine draft has named it. */
+  setFeelProfile(songId: string, feelProfile: string | null): Promise<void>;
+
   countAll(): Promise<number>;
 }
 

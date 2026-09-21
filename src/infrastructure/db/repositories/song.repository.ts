@@ -195,6 +195,13 @@ export class DrizzleSongRepository implements SongRepository {
     return this.hydrate(row);
   }
 
+  async setFeelProfile(songId: string, feelProfile: string | null): Promise<void> {
+    await this.db
+      .update(songs)
+      .set({ feelProfile, updatedAt: new Date() })
+      .where(eq(songs.id, songId));
+  }
+
   async countAll(): Promise<number> {
     const [row] = await this.db.select({ value: count() }).from(songs);
     return Number(row?.value ?? 0);

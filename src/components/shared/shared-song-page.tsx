@@ -40,7 +40,7 @@ export function SharedSongPage() {
   }, [source]);
 
   if (decoded && decoded !== 'invalid') {
-    return <LoadedSong song={decoded} notice={t('openedNotice')} />;
+    return <LoadedSong song={decoded} notice={t('openedNotice')} payload={source} />;
   }
 
   const invalid = decoded === 'invalid';
@@ -83,13 +83,33 @@ export function SharedSongPage() {
   );
 }
 
-function LoadedSong({ song, notice }: { song: SharedSongView; notice: string }) {
+function LoadedSong({
+  song,
+  notice,
+  payload,
+}: {
+  song: SharedSongView;
+  notice: string;
+  payload: string;
+}) {
+  const t = useTranslations('song');
+  // The link this page was opened from is itself the share link — rebuilt here
+  // so the reader can pass the song on, with any sync they added folded in.
+  const [origin, setOrigin] = React.useState<string | null>(null);
+  React.useEffect(() => {
+    // Read once after mount: the origin is browser state, unknown on the server.
+    const id = window.setTimeout(() => setOrigin(window.location.origin + window.location.pathname), 0);
+    return () => window.clearTimeout(id);
+  }, []);
+  const fragment = payload.replace(/^.*#/, '');
+  const shareUrl = origin ? `${origin}#${fragment}` : undefined;
+
   return (
     <div className="space-y-6">
       <p className="rounded-card border border-line bg-panel px-4 py-3 text-[13px] text-bone-muted">
         {notice}
       </p>
-      <SongReader song={song} />
+      <SongReader song={song} shareUrl={shareUrl} shareLabel={t('shareButtonShared')} />
     </div>
   );
 }
