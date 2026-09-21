@@ -105,7 +105,7 @@ export class AnthropicEngine implements TranscreationEngine {
       body: JSON.stringify({
         model: this.model,
         max_tokens: 12_000,
-        temperature: 0.4,
+        // No sampling parameters: current models reject `temperature` outright.
         system: systemPrompt(brief.target),
         messages: [{ role: 'user', content: userPrompt(brief) }],
       }),
