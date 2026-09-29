@@ -10,6 +10,7 @@ import { siteUrl } from '@/lib/env';
 import { SiteHeader } from '@/components/layout/site-header';
 import { SiteFooter } from '@/components/layout/site-footer';
 import { ToastProvider } from '@/components/ui/toast';
+import { ChannelCapture } from '@/components/shared/channel-capture';
 
 /**
  * Pre-render the shell for all three languages at build time.
@@ -100,6 +101,8 @@ export default async function LocaleLayout({
       <body className="fl-grain min-h-dvh antialiased">
         <NextIntlClientProvider>
           <ToastProvider>
+            {/* Renders nothing; notes which posted link opened this visit. */}
+            <ChannelCapture />
             {/* First stop for a keyboard user, so the nav can be jumped past. */}
             <a
               href="#main"

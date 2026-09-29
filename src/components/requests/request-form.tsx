@@ -6,6 +6,7 @@ import { Link, useRouter } from '@/i18n/navigation';
 import { LANGUAGE_CODES, TARGET_LANGUAGES } from '@/domain/shared/language';
 import { MAX_REQUESTER_NOTE_LENGTH } from '@/domain/request/song-request';
 import { submitRequestAction } from '@/actions/requests';
+import { readChannel } from '@/lib/channel';
 import { translateNowAction } from '@/actions/translate';
 import type { TranslateNowOutput } from '@/actions/translate';
 import { cn } from '@/lib/cn';
@@ -192,6 +193,7 @@ export function RequestForm({ queuedCount }: { queuedCount: number }) {
         requesterAlias: alias || null,
         requesterNote: note || null,
         lyrics: lyrics.trim(),
+        channel: readChannel(),
       });
 
       if (!queued.ok) {
@@ -243,6 +245,7 @@ export function RequestForm({ queuedCount }: { queuedCount: number }) {
         requesterAlias: alias || null,
         requesterNote: note || null,
         lyrics: lyrics.trim() || null,
+        channel: readChannel(),
       });
 
       if (!result.ok) {

@@ -3,6 +3,7 @@ import type { ReasonTag } from '@/domain/song/reason-tag';
 import type { PublicSong } from '@/domain/song/song';
 import type { SharedSong } from '@/domain/song/share-package';
 import type { SongRequest } from '@/domain/request/song-request';
+import type { RequestChannel } from '@/domain/request/request-channel';
 import type { SongSummary } from '@/application/ports/repositories';
 
 /**
@@ -174,6 +175,10 @@ export interface RequestView {
   readonly lyricLineCount: number | null;
   readonly status: SongRequest['status'];
   readonly songSlug: string | null;
+  /** Which posted link brought the ask. Maintainer-facing, never on a public page. */
+  readonly channel: RequestChannel;
+  /** ISO string, or null while the request is still open. */
+  readonly readyAt: string | null;
   /** ISO string: `Date` objects serialise, but the string is unambiguous. */
   readonly createdAt: string;
 }
@@ -189,6 +194,8 @@ export function toRequestView(request: SongRequest): RequestView {
     lyricLineCount: request.lyricLineCount,
     status: request.status,
     songSlug: request.songSlug,
+    channel: request.channel,
+    readyAt: request.readyAt ? request.readyAt.toISOString() : null,
     createdAt: request.createdAt.toISOString(),
   };
 }

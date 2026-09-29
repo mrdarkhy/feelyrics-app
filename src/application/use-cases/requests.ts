@@ -10,6 +10,8 @@ import type {
   RequestStatus,
   SongRequest,
 } from '@/domain/request/song-request';
+import { REQUEST_CHANNELS } from '@/domain/request/request-channel';
+import type { RequestChannel } from '@/domain/request/request-channel';
 import type {
   Clock,
   RateLimiter,
@@ -120,4 +122,37 @@ export async function updateRequestStatus(
 export async function weeklyRequestCount(deps: RequestsPort): Promise<number> {
   const since = new Date(deps.clock.now().getTime() - 7 * 24 * 60 * 60 * 1000);
   return deps.requests.countSince(since);
+}
+
+const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+
+export interface ChannelCount {
+  readonly channel: RequestChannel;
+  readonly count: number;
+}
+
+/**
+ * The same weekly number, split by where the ask came from.
+ *
+ * Every known channel is returned, including the ones at zero: a channel that
+ * disappears from the list when nobody came through it reads as "not tracked"
+ * rather than "posted there, nobody came", and those are opposite conclusions.
+ * Sorted by count so the row that matters is first, with ties broken by the
+ * declared order for a stable table.
+ */
+export async function weeklyRequestsByChannel(
+  deps: RequestsPort,
+  days = 7,
+): Promise<readonly ChannelCount[]> {
+  const window = Math.max(1, days) * (WEEK_MS / 7);
+  const since = new Date(deps.clock.now().getTime() - window);
+  const tally = await deps.requests.countByChannelSince(since);
+
+  return REQUEST_CHANNELS.map((channel, index) => ({
+    channel,
+    count: tally[channel] ?? 0,
+    index,
+  }))
+    .sort((a, b) => b.count - a.count || a.index - b.index)
+    .map(({ channel, count }) => ({ channel, count }));
 }

@@ -117,6 +117,14 @@ export interface RequestRepository {
     withinMs: number,
   ): Promise<SongRequest | null>;
   countSince(since: Date): Promise<number>;
+  /**
+   * Requests per channel since a date, as `{ tt: 4, direct: 11 }`.
+   *
+   * A grouped count rather than a list, because the caller only ever wants the
+   * tally and the list would carry pasted lyrics across a boundary that has no
+   * business seeing them.
+   */
+  countByChannelSince(since: Date): Promise<Record<string, number>>;
 }
 
 export interface SuggestionFilter {

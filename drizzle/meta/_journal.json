@@ -22,6 +22,13 @@
       "when": 1789657529099,
       "tag": "0002_steep_the_professor",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1790148344067,
+      "tag": "0003_request_channel",
+      "breakpoints": true
     }
   ]
 }

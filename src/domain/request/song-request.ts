@@ -2,6 +2,8 @@ import { domainError, err, ok } from '../shared/result';
 import type { Result } from '../shared/result';
 import { isTargetLanguage } from '../shared/language';
 import type { TargetLanguage } from '../shared/language';
+import { DEFAULT_REQUEST_CHANNEL, normalizeChannel } from './request-channel';
+import type { RequestChannel } from './request-channel';
 
 /**
  * A request for a song to be feel-translated.
@@ -72,6 +74,25 @@ export interface SongRequest {
   readonly status: RequestStatus;
   /** Set once the translation is published. */
   readonly songSlug: string | null;
+  /**
+   * The channel the asker arrived through — see {@link RequestChannel}.
+   *
+   * Stored on the request rather than in an analytics product because the
+   * question it answers ("which post brought someone who actually asked for
+   * something") is about this row, and because a hosted analytics plan that
+   * records custom events is a bill the project does not need to pay to count
+   * eight buckets.
+   */
+  readonly channel: RequestChannel;
+  /**
+   * When the request first landed as a published song.
+   *
+   * Separate from `updatedAt`, which moves on every edit: the interesting
+   * measure is how long an ask waits before it becomes something the asker can
+   * open, and that number is only recoverable if the moment is stamped once and
+   * then left alone.
+   */
+  readonly readyAt: Date | null;
   readonly createdAt: Date;
   readonly updatedAt: Date;
 }
@@ -129,6 +150,10 @@ export function transition(
     status: to,
     songSlug: songSlug === undefined ? request.songSlug : songSlug,
     pastedLyrics: settled ? null : request.pastedLyrics,
+    // First landing only. A song that is re-opened and published again has not
+    // waited twice, and overwriting the stamp would quietly shorten the
+    // time-to-ready of exactly the requests that were hardest to finish.
+    readyAt: to === 'ready' ? (request.readyAt ?? new Date()) : request.readyAt,
     updatedAt: new Date(),
   });
 }
@@ -148,6 +173,8 @@ export interface NewRequestInput {
   readonly hasLyrics?: boolean;
   readonly lyricLineCount?: number | null;
   readonly pastedLyrics?: string | null;
+  /** Raw `?src=` marker from the link the asker followed, if there was one. */
+  readonly channel?: string | null;
 }
 
 export interface ValidatedRequest {
@@ -160,6 +187,7 @@ export interface ValidatedRequest {
   readonly lyricLineCount: number | null;
   readonly pastedLyrics: string | null;
   readonly status: RequestStatus;
+  readonly channel: RequestChannel;
 }
 
 /**
@@ -226,6 +254,12 @@ export function validateNewRequest(
     // Only a request that actually arrived with words keeps any.
     pastedLyrics: hasLyrics && pasted.length > 0 ? pasted : null,
     status: hasLyrics ? 'queued' : 'lyrics-needed',
+    // Never rejects: an unusable marker costs the request nothing, it just
+    // lands in `direct` or `other`.
+    channel:
+      input.channel === undefined || input.channel === null
+        ? DEFAULT_REQUEST_CHANNEL
+        : normalizeChannel(input.channel),
   });
 }
 

@@ -4,7 +4,9 @@ import type { TargetLanguage } from '../shared/language';
 import type { ExtractionResult } from '../lyrics/extract';
 import { normaliseTags } from './reason-tag';
 import type { DraftSection } from './body';
-import { MAX_NOTE_LENGTH, MAX_BODY_LINE_LENGTH } from './body';
+import { MAX_NOTE_LENGTH, MAX_BODY_LINE_LENGTH, lineKey } from './body';
+import { isRestatedNote } from './draft-quality';
+import type { DraftFacts } from './draft-quality';
 
 /**
  * What the transcreation engine is asked for, and what it is allowed to give back.
@@ -191,6 +193,8 @@ export interface EngineDraft {
   readonly sections: readonly DraftSection[];
   /** Lines the engine left without a note — reported, never invented. */
   readonly unannotated: number;
+  /** What the re-attachment saw, for `gradeDraft` to judge. */
+  readonly facts: DraftFacts;
 }
 
 /**
@@ -228,8 +232,13 @@ export function assembleEngineDraft(
       if (typeof rawLine.t !== 'string') continue;
       const t = rawLine.t.trim().slice(0, MAX_BODY_LINE_LENGTH);
       if (t.length === 0) continue;
-      const note =
+      const raw =
         typeof rawLine.n === 'string' ? rawLine.n.trim().slice(0, MAX_NOTE_LENGTH) : '';
+      // A note that restates the line it sits under is dropped here rather than
+      // published: kept, it becomes a note chip that tells the reader nothing
+      // and a dataset row that teaches nothing.
+      const source = originals.get(rawLine.i)?.text ?? '';
+      const note = raw.length > 0 && !isRestatedNote(raw, t, source) ? raw : '';
       const tags = Array.isArray(rawLine.g) ? normaliseTags(rawLine.g) : [];
       rendered.set(rawLine.i, {
         t,
@@ -253,6 +262,10 @@ export function assembleEngineDraft(
   }
 
   let unannotated = 0;
+  let notedLines = 0;
+  let taggedLines = 0;
+  let translatableLines = 0;
+  let echoedLines = 0;
   const fallback = SECTION_FALLBACK[brief.target];
 
   const sections: DraftSection[] = brief.sections.map((section, index) => {
@@ -270,6 +283,17 @@ export function assembleEngineDraft(
         const out = rendered.get(line.i);
         if (!out) throw new Error('unreachable: missing line survived the check');
         if (!out.n) unannotated += 1;
+        else {
+          notedLines += 1;
+          if (out.g.length > 0) taggedLines += 1;
+        }
+        // Ad-libs are meant to come back as sung, so an identical rendering
+        // there is the method working, not the engine giving up.
+        if (!line.adLib) {
+          translatableLines += 1;
+          const source = lineKey(line.text);
+          if (source.length > 0 && source === lineKey(out.t)) echoedLines += 1;
+        }
         return { original: line.text, rendering: out.t, note: out.n, tags: out.g };
       }),
     };
@@ -280,5 +304,17 @@ export function assembleEngineDraft(
       ? answer.feel.trim().slice(0, 300)
       : null;
 
-  return ok({ feelProfile: feel, sections, unannotated });
+  return ok({
+    feelProfile: feel,
+    sections,
+    unannotated,
+    facts: {
+      lineCount: originals.size,
+      translatableLines,
+      echoedLines,
+      notedLines,
+      taggedLines,
+      hasFeelProfile: feel !== null,
+    },
+  });
 }

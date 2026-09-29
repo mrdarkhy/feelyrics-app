@@ -25,6 +25,15 @@ export interface SubmitRequestInput {
    * database, which is what lets the form ask for them at all.
    */
   lyrics?: string | null;
+  /**
+   * The `?src=` marker the browser picked up when the visit started.
+   *
+   * Sent from the client because that is where it was seen: the form is reached
+   * by client-side navigation from the page that carried the link, so by the
+   * time this action runs the server has no referrer worth reading. It is
+   * normalised against a closed list before it is stored.
+   */
+  channel?: string | null;
 }
 
 export async function submitRequestAction(
@@ -63,6 +72,7 @@ export async function submitRequestAction(
     hasLyrics: lineCount > 0,
     lyricLineCount: lineCount > 0 ? lineCount : null,
     pastedLyrics: pasted.length > 0 ? pasted : null,
+    channel: input.channel ?? null,
     submitterKey: key,
   });
 

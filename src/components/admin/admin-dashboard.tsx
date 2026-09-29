@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import * as TabsPrimitive from '@radix-ui/react-tabs';
 import { useRouter } from '@/i18n/navigation';
 import type { RequestView } from '@/lib/view-models';
+import type { RequestChannel } from '@/domain/request/request-channel';
 import type { SuggestionStatus } from '@/domain/suggestion/suggestion';
 import type { RequestStatus } from '@/domain/request/song-request';
 import { reviewSuggestionAction } from '@/actions/suggestions';
@@ -46,14 +47,22 @@ const TAB_CLASSES = cn(
  * along. Accepting a suggestion rewrites the line for every reader, so the
  * action says so rather than presenting itself as a filing decision.
  */
+export interface ChannelCountView {
+  channel: RequestChannel;
+  count: number;
+}
+
 export function AdminDashboard({
   suggestions,
   requests,
   songs,
+  channels,
 }: {
   suggestions: readonly SuggestionView[];
   requests: readonly RequestView[];
   songs: readonly EditorSongOption[];
+  /** Requests per channel over the last seven days, busiest first. */
+  channels: readonly ChannelCountView[];
 }) {
   const t = useTranslations('admin');
   const router = useRouter();
@@ -113,6 +122,7 @@ export function AdminDashboard({
         </TabsPrimitive.Content>
 
         <TabsPrimitive.Content value="requests" className="space-y-3 focus:outline-none">
+          <ChannelStrip channels={channels} />
           {requests.length === 0 ? (
             <p className="text-[15px] text-bone-muted">{t('noRequests')}</p>
           ) : (
@@ -216,6 +226,43 @@ function SuggestionCard({
   );
 }
 
+/**
+ * Where this week's asks came from.
+ *
+ * The weekly request count is the growth plan's leading indicator, and this is
+ * the line that makes it actionable: the same number split by the link people
+ * followed. Channels sitting at zero stay on the strip — "posted there, nobody
+ * came" is a finding, and a row that vanishes when it is empty hides it.
+ */
+function ChannelStrip({ channels }: { channels: readonly ChannelCountView[] }) {
+  const t = useTranslations('admin');
+  const tChannel = useTranslations('channels');
+  const total = channels.reduce((sum, entry) => sum + entry.count, 0);
+
+  return (
+    <div className="fl-surface space-y-3 p-4">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <p className="text-[11px] font-semibold uppercase tracking-widest text-olive">
+          {t('channelsTitle')}
+        </p>
+        <p className="font-display text-[15px] font-bold tabular-nums text-bone">
+          {t('channelsTotal', { count: total })}
+        </p>
+      </div>
+      <ul className="flex flex-wrap gap-1.5">
+        {channels.map((entry) => (
+          <li key={entry.channel}>
+            <Chip tone={entry.count > 0 ? 'feel' : 'neutral'}>
+              {tChannel(entry.channel)} · <span className="tabular-nums">{entry.count}</span>
+            </Chip>
+          </li>
+        ))}
+      </ul>
+      <p className="text-[12px] leading-relaxed text-olive">{t('channelsHint')}</p>
+    </div>
+  );
+}
+
 function RequestCard({
   request,
   songs,
@@ -229,6 +276,7 @@ function RequestCard({
   const tRequests = useTranslations('requests');
   const tErrors = useTranslations('errors.codes');
   const tLang = useTranslations('languages');
+  const tChannel = useTranslations('channels');
   const [slug, setSlug] = React.useState(request.songSlug ?? '');
   const [source, setSource] = React.useState('');
   const [error, setError] = React.useState<string | null>(null);
@@ -293,7 +341,13 @@ function RequestCard({
           <p className="font-display text-[15px] font-bold text-bone">{request.title}</p>
           <p className="text-[13px] text-bone-muted">{request.artist}</p>
         </div>
-        <Chip tone="neutral">{tRequests(`status.${request.status}`)}</Chip>
+        <div className="flex flex-none flex-wrap justify-end gap-1.5">
+          <Chip tone="neutral">{tRequests(`status.${request.status}`)}</Chip>
+          {/* Maintainer-only: the asker's channel is never shown on a public page. */}
+          <Chip tone={request.channel === 'direct' ? 'neutral' : 'feel'}>
+            {tChannel(request.channel)}
+          </Chip>
+        </div>
       </div>
 
       {request.requesterNote ? (

@@ -269,6 +269,8 @@ export function SongReader({
             songKey={syncKey}
             sync={sync}
             lineCount={totalLines}
+            title={song.title}
+            artist={song.artist}
             onActiveIndex={setActiveIndex}
           />
         ) : null}

@@ -13,6 +13,7 @@ import {
 import { relations } from 'drizzle-orm';
 import { LANGUAGE_CODES, TARGET_LANGUAGES } from '@/domain/shared/language';
 import { REQUEST_STATUSES } from '@/domain/request/song-request';
+import { REQUEST_CHANNELS } from '@/domain/request/request-channel';
 import { SUGGESTION_STATUSES } from '@/domain/suggestion/suggestion';
 import { REASON_TAGS } from '@/domain/song/reason-tag';
 
@@ -28,6 +29,7 @@ import { REASON_TAGS } from '@/domain/song/reason-tag';
 export const languageEnum = pgEnum('language_code', LANGUAGE_CODES);
 export const targetLanguageEnum = pgEnum('target_language', TARGET_LANGUAGES);
 export const requestStatusEnum = pgEnum('request_status', REQUEST_STATUSES);
+export const requestChannelEnum = pgEnum('request_channel', REQUEST_CHANNELS);
 export const suggestionStatusEnum = pgEnum('suggestion_status', SUGGESTION_STATUSES);
 export const reasonTagEnum = pgEnum('reason_tag', REASON_TAGS);
 
@@ -130,6 +132,14 @@ export const songRequests = pgTable(
     /** Points at the published song once the request is fulfilled. */
     songSlug: text('song_slug'),
     /**
+     * Which posted link brought this ask. An enum rather than free text, so the
+     * column cannot become a dumping ground for whatever a stranger puts after
+     * `?src=`.
+     */
+    channel: requestChannelEnum('channel').notNull().default('direct'),
+    /** First time this request became a song somebody could open. */
+    readyAt: timestamp('ready_at', { withTimezone: true }),
+    /**
      * Lower-cased title+artist, so "Şımarık / Tarkan" and "şimarik / tarkan"
      * collapse onto the same queue entry.
      */
@@ -140,6 +150,9 @@ export const songRequests = pgTable(
   (table) => [
     index('requests_status_idx').on(table.status, table.createdAt),
     index('requests_dedupe_idx').on(table.dedupeKey, table.createdAt),
+    // The weekly dashboard reads "requests per channel since <date>", which is
+    // this index exactly.
+    index('requests_channel_idx').on(table.channel, table.createdAt),
   ],
 );
 

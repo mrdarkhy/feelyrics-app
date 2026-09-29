@@ -5,6 +5,7 @@ import es from '@messages/es.json';
 import { UI_LOCALES } from '@/domain/shared/language';
 import { REASON_TAGS } from '@/domain/song/reason-tag';
 import { REQUEST_STATUSES } from '@/domain/request/song-request';
+import { REQUEST_CHANNELS } from '@/domain/request/request-channel';
 
 /**
  * Translation completeness, enforced rather than trusted.
@@ -119,6 +120,18 @@ describe('message catalogues', () => {
       for (const status of REQUEST_STATUSES) {
         expect(catalogue.has(`requests.status.${status}`)).toBe(true);
         expect(catalogue.has(`requests.statusHint.${status}`)).toBe(true);
+      }
+    }
+  });
+
+  it('labels every request channel, in every language', () => {
+    for (const locale of UI_LOCALES) {
+      const catalogue = catalogues[locale]!;
+      for (const channel of REQUEST_CHANNELS) {
+        expect(
+          catalogue.has(`channels.${channel}`),
+          `${locale} missing channels.${channel}`,
+        ).toBe(true);
       }
     }
   });

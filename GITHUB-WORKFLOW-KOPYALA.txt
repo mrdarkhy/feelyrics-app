@@ -1,0 +1,138 @@
+name: CI
+
+# Every change to this repository arrives as a file upload through GitHub's web
+# interface, one commit per upload. That makes a half-uploaded feature the most
+# likely way this project breaks: on 17 September a feature whose files went up
+# in two batches left the Vercel deployment broken for four days, because nobody
+# looked at the repository between the upload and the next visit.
+#
+# These two jobs look. They run on every push, finish in a few minutes, and turn
+# a missing file, a forgotten migration or a failing test into a red cross next
+# to the commit instead of a dead site discovered days later.
+#
+# Nothing here touches the production database or the live deployment. The
+# second job starts an empty PostgreSQL inside the runner, applies the
+# migrations in drizzle/ to it, seeds the catalogue and builds the site against
+# it — which is the only way to prove that the pages which read the database
+# still render, and that a new migration actually applies to a clean schema.
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+  workflow_dispatch:
+
+# A second upload while the first is still running supersedes it: only the tip
+# of the branch has to be green.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NEXT_TELEMETRY_DISABLED: '1'
+
+jobs:
+  checks:
+    name: Types, lint, unit tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      # `npm ci` rather than `npm install`: it installs exactly what
+      # package-lock.json pins and fails if the lockfile and package.json have
+      # drifted apart, which is itself worth knowing.
+      - name: Install dependencies
+        run: npm ci
+
+      - name: TypeScript
+        run: npx tsc --noEmit
+
+      - name: ESLint
+        run: npm run lint
+
+      - name: Unit tests
+        run: npm run test
+
+  browser:
+    name: Migrations, build, end-to-end
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: feelyrics_ci
+        ports:
+          - 5432:5432
+        # Without a health check the first migration can race the database's own
+        # start-up and fail for a reason that has nothing to do with the change.
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+
+    env:
+      # A throwaway database that is created with this job and destroyed with
+      # it. These values are deliberately written out in full instead of hidden
+      # in repository secrets: they are not secrets, and a reader of this file
+      # should be able to see that production is not involved.
+      DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5432/feelyrics_ci
+      ADMIN_TOKEN: ci-admin-token-not-a-real-secret-0000
+      # Next.js inlines this origin into the pages at build time and the
+      # end-to-end tests visit the app on that same origin, so the two have to
+      # agree. The real origin is set in the Vercel dashboard, not here.
+      NEXT_PUBLIC_SITE_URL: http://127.0.0.1:3100
+      PORT: '3100'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Runs the files in drizzle/ against an empty database. A schema change
+      # whose migration was never generated fails here, rather than at the first
+      # request after a redeploy.
+      - name: Apply migrations
+        run: npm run db:migrate
+
+      - name: Seed the catalogue
+        run: npm run db:seed
+
+      # With a seeded database this build really pre-renders the song and pair
+      # pages (generateStaticParams reads the catalogue), so a crash in page
+      # metadata is caught here and not by Vercel.
+      - name: Production build
+        run: npm run build
+
+      - name: Install Chromium for Playwright
+        run: npx playwright install --with-deps chromium
+
+      # Starts the built app on PORT and drives it in a real browser, desktop
+      # and mobile viewports, exactly as playwright.config.ts describes.
+      - name: End-to-end tests
+        run: npm run test:e2e
+
+      - name: Keep the traces of a failed run
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-traces
+          path: test-results/
+          retention-days: 7
+          if-no-files-found: ignore

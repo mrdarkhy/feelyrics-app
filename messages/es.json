@@ -51,6 +51,16 @@
     "de": "alemán",
     "nap": "napolitano"
   },
+  "channels": {
+    "direct": "Directo",
+    "tt": "TikTok",
+    "ig": "Instagram",
+    "yt": "YouTube",
+    "x": "X",
+    "rd": "Reddit",
+    "hn": "Hacker News",
+    "other": "Otro enlace"
+  },
   "tags": {
     "label": "Razón",
     "feel": "sentimiento",
@@ -383,7 +393,10 @@
     "editorPasteFromRequest": "La letra que pegaron ya está en la caja.",
     "editorSavedAndClosed": "Guardado — {lines, plural, one {# verso} other {# versos}}. La petición queda lista y la letra que pegaron se borra.",
     "markReadyBlocked": "Todavía sin cuerpo. Tradúcela primero en la mesa de Letras; marcarla como lista borra la letra que llegó con esta petición.",
-    "editorAnnotated": "{count} traían nota o etiquetas"
+    "editorAnnotated": "{count} traían nota o etiquetas",
+    "channelsTitle": "Solicitudes por canal · últimos 7 días",
+    "channelsTotal": "{count, plural, =0 {sin solicitudes} one {# solicitud} other {# solicitudes}}",
+    "channelsHint": "Se cuenta a partir del marcador ?src= del enlace con el que empezó la visita — src=tt, ig, yt, x, rd, hn. Sin marcador es Directo; un marcador desconocido es Otro enlace."
   },
   "errors": {
     "title": "Algo ha salido mal",

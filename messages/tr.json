@@ -51,6 +51,16 @@
     "de": "Almanca",
     "nap": "Napolice"
   },
+  "channels": {
+    "direct": "Doğrudan",
+    "tt": "TikTok",
+    "ig": "Instagram",
+    "yt": "YouTube",
+    "x": "X",
+    "rd": "Reddit",
+    "hn": "Hacker News",
+    "other": "Diğer bağlantı"
+  },
   "tags": {
     "label": "Neden",
     "feel": "his",
@@ -383,7 +393,10 @@
     "editorPasteFromRequest": "İsteyenin yapıştırdığı sözler kutuda.",
     "editorSavedAndClosed": "Kaydedildi — {lines, plural, other {# satır}}. İstek hazır olarak işaretlendi ve isteyenin sözleri silindi.",
     "markReadyBlocked": "Gövde henüz yok. Önce Sözler masasında çevir; hazır işaretlemek bu istekle gelen sözleri siler.",
-    "editorAnnotated": "{count} tanesi notuyla ve etiketiyle geldi"
+    "editorAnnotated": "{count} tanesi notuyla ve etiketiyle geldi",
+    "channelsTitle": "Kanala göre istekler · son 7 gün",
+    "channelsTotal": "{count, plural, =0 {istek yok} one {# istek} other {# istek}}",
+    "channelsHint": "Ziyaretin başladığı bağlantıdaki ?src= işaretinden sayılır — src=tt, ig, yt, x, rd, hn. İşaret yoksa Doğrudan, tanınmayan işaret Diğer bağlantı olur."
   },
   "errors": {
     "title": "Bir şeyler ters gitti",

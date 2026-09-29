@@ -51,6 +51,16 @@
     "de": "German",
     "nap": "Neapolitan"
   },
+  "channels": {
+    "direct": "Direct",
+    "tt": "TikTok",
+    "ig": "Instagram",
+    "yt": "YouTube",
+    "x": "X",
+    "rd": "Reddit",
+    "hn": "Hacker News",
+    "other": "Other link"
+  },
   "tags": {
     "label": "Reason",
     "feel": "feel",
@@ -383,7 +393,10 @@
     "editorPasteFromRequest": "The asker’s paste is in the box.",
     "editorSavedAndClosed": "Saved — {lines, plural, one {# line} other {# lines}}. The request is marked ready and the asker’s words are deleted.",
     "markReadyBlocked": "No body yet. Translate it in the Lyrics desk first; marking ready deletes the lyrics this request arrived with.",
-    "editorAnnotated": "{count} came with a note or tags"
+    "editorAnnotated": "{count} came with a note or tags",
+    "channelsTitle": "Requests by channel · last 7 days",
+    "channelsTotal": "{count, plural, =0 {no requests} one {# request} other {# requests}}",
+    "channelsHint": "Counted from the ?src= marker on the link the visit started with — src=tt, ig, yt, x, rd, hn. No marker means Direct; an unknown marker means Other link."
   },
   "errors": {
     "title": "Something went wrong",

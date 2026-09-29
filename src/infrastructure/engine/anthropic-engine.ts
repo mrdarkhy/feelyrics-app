@@ -2,6 +2,7 @@ import 'server-only';
 import type { TranscreationEngine } from '@/application/ports/engine';
 import type { EngineBrief } from '@/domain/song/engine-output';
 import { REASON_TAGS } from '@/domain/song/reason-tag';
+import { requiredNotes } from '@/domain/song/draft-quality';
 
 /**
  * The engine, backed by the Claude Messages API.
@@ -17,7 +18,7 @@ const ENDPOINT = 'https://api.anthropic.com/v1/messages';
 const API_VERSION = '2023-06-01';
 const DEFAULT_MODEL = 'claude-sonnet-5';
 /** Method version + model: what a suggestion on this song is measured against. */
-export const ENGINE_METHOD_VERSION = '0.2.1';
+export const ENGINE_METHOD_VERSION = '0.2.2';
 
 /**
  * The answer is collected as a tool call rather than as text. A forced tool
@@ -75,7 +76,7 @@ const SOURCE_NAMES: Record<string, string> = {
   nap: 'Neapolitan',
 };
 
-function systemPrompt(target: string): string {
+function systemPrompt(target: string, noteQuota: number): string {
   const targetName = TARGET_NAMES[target] ?? target;
   return `You are the Feelyrics transcreation engine. You translate song lyrics into the closest possible FEELING in ${targetName}, not word for word — the way a bilingual fan explains to a friend what a line really does.
 
@@ -88,10 +89,11 @@ Method, applied to every line:
 4. When both languages happen to share an idiom, use it (tag "idiom-twin"). Watch for look-alike words that mean something else (tag "false-friend").
 5. Never explain a line by making it longer; a rendering is a line someone could sing or say, not a paragraph.
 6. Do not censor. Slang stays slang, profanity stays profanity at the same intensity.
+7. Never hand a line back unchanged. A rendering identical to the source line is only ever right for a name, a place, an ad-lib or a loanword the target already uses — everywhere else it means the line was skipped, and the whole draft is refused for it.
 
-Notes: write a short note ONLY where a real decision was made — what the literal reading would have lost, and why this rendering keeps the feeling. Notes, section labels and the feel profile are written in ${targetName}, because the reader is a ${targetName} speaker. At least the three strongest lines of the song must carry a note; a chorus line is usually one of them. Give every noted line 1–3 reason tags from exactly this list: ${REASON_TAGS.join(', ')}.
+Notes: write a short note ONLY where a real decision was made — what the literal reading would have lost, and why this rendering keeps the feeling. A note that restates the line in other words is worse than no note and is thrown away: if the note would only say what the line already says, leave it out and note a different line instead. Notes, section labels and the feel profile are written in ${targetName}, because the reader is a ${targetName} speaker. At least ${noteQuota} ${noteQuota === 1 ? 'line' : 'lines'} of this song must carry a note, and they must be the strongest ones — a chorus line is usually among them, because the page shows only two lines to a first-time reader and picks noted ones first. Give every noted line 1–3 reason tags from exactly this list: ${REASON_TAGS.join(', ')}; a note with no tag does not count.
 
-Feel profile: one short line in ${targetName} naming the emotion the whole song runs on (for example an elegy in a major key; reckless abandon; grief with the brakes cut).
+Feel profile: required, never empty — one short line in ${targetName} naming the emotion the whole song runs on (for example an elegy in a major key; reckless abandon; grief with the brakes cut). It is the first sentence a stranger reads about this song, so write the song's own feeling, not a description of the genre.
 
 Output: submit the whole answer through the ${ANSWER_TOOL} tool, nothing else. One entry per input line index, every index present exactly once, in order; "t" is the rendering; omit "n" and "g" on lines without a note; section labels in ${targetName} (e.g. verse, chorus, bridge in that language). Do NOT repeat the original text anywhere in your answer.`;
 }
@@ -145,7 +147,7 @@ export class AnthropicEngine implements TranscreationEngine {
         model: this.model,
         max_tokens: 32_000,
         // No sampling parameters: current models reject `temperature` outright.
-        system: systemPrompt(brief.target),
+        system: systemPrompt(brief.target, requiredNotes(brief.lineCount)),
         messages: [{ role: 'user', content: userPrompt(brief) }],
         tools: [
           {
@@ -205,7 +207,11 @@ class FakeEngine implements TranscreationEngine {
         lines: section.lines.map((line, position) => ({
           i: line.i,
           t: `[${brief.target}] ${line.text}`,
-          ...(position === 0 ? { n: 'fake note', g: ['literal-wins'] } : {}),
+          // Long enough to survive the restated-note check, so the fake path
+          // grades the same way a real draft would.
+          ...(position === 0
+            ? { n: `[fake] a decision was made on line ${line.i}`, g: ['literal-wins'] }
+            : {}),
         })),
       })),
     });

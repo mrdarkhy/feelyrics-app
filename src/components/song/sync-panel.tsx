@@ -1,11 +1,13 @@
 'use client';
 
 import * as React from 'react';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import type { SyncData } from '@/domain/song/share-package';
+import type { TrackCandidate } from '@/domain/song/spotify-match';
 import { loadSpotifyIframeApi } from '@/lib/spotify-embed';
 import type { EmbedController, PlaybackUpdate } from '@/lib/spotify-embed';
 import { parseSpotifyTrackId, saveSpotifyTrack, saveTimings } from '@/lib/sync-store';
+import { formatDuration, lookupCopy } from '@/lib/spotify-search-copy';
 import { Button } from '@/components/ui/button';
 import { Field, FieldHint, FieldInput, FieldLabel } from '@/components/ui/field';
 import { cn } from '@/lib/cn';
@@ -42,9 +44,30 @@ export interface SyncPanelProps {
   sync: SyncData;
   /** How many lines the reader sees, in reading order. */
   lineCount: number;
+  /** The song's own title and artist — what the track lookup searches for. */
+  title?: string;
+  artist?: string;
   onActiveIndex: (index: number | null) => void;
   /** Called when the reader captures or changes sync data. */
   onSyncChange?: (sync: SyncData) => void;
+}
+
+type LookupState =
+  | { status: 'idle' }
+  | { status: 'searching' }
+  | { status: 'choose'; candidates: readonly TrackCandidate[] }
+  | { status: 'empty' }
+  | { status: 'off' }
+  | { status: 'error' };
+
+interface LookupResponse {
+  ok?: unknown;
+  code?: unknown;
+  data?: {
+    best?: TrackCandidate | null;
+    confidence?: unknown;
+    alternatives?: TrackCandidate[];
+  };
 }
 
 const TICK_MS = 100;
@@ -60,12 +83,22 @@ function activeIndexFor(timings: readonly number[], nowMs: number): number | nul
   return index;
 }
 
-export function SyncPanel({ songKey, sync, lineCount, onActiveIndex, onSyncChange }: SyncPanelProps) {
+export function SyncPanel({
+  songKey,
+  sync,
+  lineCount,
+  title,
+  artist,
+  onActiveIndex,
+  onSyncChange,
+}: SyncPanelProps) {
   const t = useTranslations('sync');
+  const copy = lookupCopy(useLocale());
 
   const [open, setOpen] = React.useState(Boolean(sync.spotifyTrackId || sync.timings));
   const [link, setLink] = React.useState('');
   const [linkError, setLinkError] = React.useState<string | null>(null);
+  const [lookup, setLookup] = React.useState<LookupState>({ status: 'idle' });
   const [mode, setMode] = React.useState<Mode>('idle');
   const [captured, setCaptured] = React.useState<number[]>([]);
   const [embedState, setEmbedState] = React.useState<'none' | 'loading' | 'ready' | 'failed'>(
@@ -241,7 +274,64 @@ export function SyncPanel({ songKey, sync, lineCount, onActiveIndex, onSyncChang
     }
     setLinkError(null);
     setLink('');
+    setLookup({ status: 'idle' });
     commit({ spotifyTrackId: id, timings });
+  }
+
+  /**
+   * Looks the track up by name instead of by pasted link.
+   *
+   * A confident match is attached straight away, because that is the four steps
+   * this feature exists to remove. Anything less shows the shortlist: attaching
+   * the wrong recording would make the sync drift against a track the reader
+   * never chose, and they would read that as the product being broken rather
+   * than as a guess.
+   */
+  const findTrack = React.useCallback(async () => {
+    if (!title) return;
+    setLookup({ status: 'searching' });
+
+    try {
+      const response = await fetch('/api/spotify/track', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, artist: artist ?? '' }),
+      });
+
+      const payload = (await response.json()) as LookupResponse;
+
+      if (!response.ok || payload.ok !== true) {
+        const code = payload.code;
+        setLookup({
+          status: code === 'not_configured' || code === 'auth_failed' ? 'off' : 'error',
+        });
+        return;
+      }
+
+      const best = payload.data?.best ?? null;
+      if (!best) {
+        setLookup({ status: 'empty' });
+        return;
+      }
+
+      if (payload.data?.confidence === 'high') {
+        setLookup({ status: 'idle' });
+        commit({ spotifyTrackId: best.id, timings });
+        return;
+      }
+
+      setLookup({
+        status: 'choose',
+        candidates: [best, ...(payload.data?.alternatives ?? [])],
+      });
+    } catch {
+      setLookup({ status: 'error' });
+    }
+  }, [title, artist, commit, timings]);
+
+  function chooseCandidate(candidate: TrackCandidate) {
+    setLookup({ status: 'idle' });
+    commit({ spotifyTrackId: candidate.id, timings });
   }
 
   if (!open) {
@@ -295,24 +385,91 @@ export function SyncPanel({ songKey, sync, lineCount, onActiveIndex, onSyncChang
           </Button>
         </div>
       ) : (
-        <form onSubmit={submitLink} className="space-y-2">
-          <Field error={linkError}>
-            <FieldLabel>{t('linkLabel')}</FieldLabel>
-            <FieldHint>{t('linkHint')}</FieldHint>
-            <div className="flex gap-2">
-              <FieldInput
-                value={link}
-                onChange={(event) => setLink(event.target.value)}
-                placeholder="https://open.spotify.com/track/…"
-                inputMode="url"
-                autoComplete="off"
-              />
-              <Button type="submit" variant="secondary" size="md" className="shrink-0 whitespace-nowrap">
-                {t('linkSubmit')}
+        <div className="space-y-3">
+          {title ? (
+            <div className="space-y-2">
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={findTrack}
+                disabled={lookup.status === 'searching'}
+              >
+                {lookup.status === 'searching' ? copy.searching : copy.find}
               </Button>
+
+              {lookup.status === 'choose' ? (
+                <div className="space-y-2">
+                  <p className="text-[12.5px] text-olive">{copy.pick}</p>
+                  <ul className="space-y-1">
+                    {lookup.candidates.map((candidate) => (
+                      <li key={candidate.id}>
+                        <button
+                          type="button"
+                          onClick={() => chooseCandidate(candidate)}
+                          className="flex w-full items-center gap-3 rounded-xl border border-line bg-ground-raised px-3 py-2 text-left transition-colors hover:border-feel/50"
+                        >
+                          {candidate.artworkUrl ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={candidate.artworkUrl}
+                              alt=""
+                              width={40}
+                              height={40}
+                              className="size-10 shrink-0 rounded-md object-cover"
+                            />
+                          ) : (
+                            <span className="size-10 shrink-0 rounded-md bg-line" />
+                          )}
+                          <span className="min-w-0 flex-1">
+                            <span className="block truncate text-[13.5px] font-semibold text-bone">
+                              {candidate.name}
+                            </span>
+                            <span className="block truncate text-[12px] text-bone-muted">
+                              {candidate.artists.join(', ')}
+                              {candidate.albumName ? ` · ${candidate.albumName}` : ''}
+                            </span>
+                          </span>
+                          <span className="shrink-0 text-[12px] tabular-nums text-olive">
+                            {formatDuration(candidate.durationMs)}
+                          </span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+
+              {lookup.status === 'empty' ? (
+                <p className="text-[12.5px] text-olive">{copy.none}</p>
+              ) : null}
+              {lookup.status === 'off' ? (
+                <p className="text-[12.5px] text-olive">{copy.unavailable}</p>
+              ) : null}
+              {lookup.status === 'error' ? (
+                <p className="text-[12.5px] text-danger">{copy.failed}</p>
+              ) : null}
             </div>
-          </Field>
-        </form>
+          ) : null}
+
+          <form onSubmit={submitLink} className="space-y-2">
+            <Field error={linkError}>
+              <FieldLabel>{t('linkLabel')}</FieldLabel>
+              <FieldHint>{t('linkHint')}</FieldHint>
+              <div className="flex gap-2">
+                <FieldInput
+                  value={link}
+                  onChange={(event) => setLink(event.target.value)}
+                  placeholder="https://open.spotify.com/track/…"
+                  inputMode="url"
+                  autoComplete="off"
+                />
+                <Button type="submit" variant="secondary" size="md" className="shrink-0 whitespace-nowrap">
+                  {t('linkSubmit')}
+                </Button>
+              </div>
+            </Field>
+          </form>
+        </div>
       )}
 
       <div className="flex flex-wrap items-center gap-2">

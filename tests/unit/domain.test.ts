@@ -158,6 +158,8 @@ describe('song requests', () => {
       pastedLyrics: null,
       status: 'queued',
       songSlug: null,
+      channel: 'direct',
+      readyAt: null,
       createdAt: new Date(),
       updatedAt: new Date(),
     };

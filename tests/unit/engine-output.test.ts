@@ -202,3 +202,90 @@ describe('extractJsonObject robustness', () => {
     expect(extractJsonObject('{"feel":"x","sections":[{"label":"a"')).toBeNull();
   });
 });
+
+/**
+ * What the assembler counts on the way past, so the quality gate has something
+ * to judge. The counting lives here because this is the only place that holds
+ * both the originals and the renderings.
+ */
+describe('assembleEngineDraft quality facts', () => {
+  function answerWith(
+    lines: readonly { i: number; t: string; n?: string; g?: string[] }[],
+    feel: string | null = 'sakin bir veda',
+  ) {
+    return {
+      ...(feel === null ? {} : { feel }),
+      sections: [
+        { label: 'Kıta', lines: lines.filter((l) => l.i < 2) },
+        { label: 'Nakarat', lines: lines.filter((l) => l.i >= 2) },
+      ],
+    };
+  }
+
+  it('drops a note that only restates its own line, and its tags with it', () => {
+    const result = assembleEngineDraft(
+      brief(),
+      answerWith([
+        { i: 0, t: 'ilk satır burada', n: 'ilk satır burada', g: ['feel'] },
+        { i: 1, t: 'ikinci satır burada' },
+        { i: 2, t: 'la la la' },
+      ]),
+    );
+    const draft = unwrap(result);
+    const first = draft.sections[0]?.lines[0];
+    expect(first?.note).toBeNull();
+    expect(first?.tags).toEqual([]);
+    expect(draft.facts.notedLines).toBe(0);
+    // The line still survives; only the empty claim about it is gone.
+    expect(isOk(validateSongBody(draft.sections))).toBe(true);
+  });
+
+  it('counts noted and tagged lines separately', () => {
+    const draft = unwrap(
+      assembleEngineDraft(
+        brief(),
+        answerWith([
+          { i: 0, t: 'ilk satır burada', n: 'düz okuma bu satırın öfkesini kaybederdi', g: ['feel'] },
+          { i: 1, t: 'ikinci satır burada', n: 'nakarata köprü kuran tekrar burada korundu' },
+          { i: 2, t: 'la la la' },
+        ]),
+      ),
+    );
+    expect(draft.facts.notedLines).toBe(2);
+    expect(draft.facts.taggedLines).toBe(1);
+    expect(draft.facts.hasFeelProfile).toBe(true);
+  });
+
+  it('counts a rendering identical to its source as an echo', () => {
+    const draft = unwrap(
+      assembleEngineDraft(
+        brief(),
+        answerWith([
+          { i: 0, t: 'first line here' },
+          { i: 1, t: 'ikinci satır burada' },
+          { i: 2, t: 'la la la' },
+        ]),
+      ),
+    );
+    expect(draft.facts.translatableLines).toBe(3);
+    expect(draft.facts.echoedLines).toBe(2);
+  });
+
+  it('reports a missing feel profile rather than inventing one', () => {
+    const draft = unwrap(
+      assembleEngineDraft(
+        brief(),
+        answerWith(
+          [
+            { i: 0, t: 'ilk satır burada' },
+            { i: 1, t: 'ikinci satır burada' },
+            { i: 2, t: 'bir şey' },
+          ],
+          null,
+        ),
+      ),
+    );
+    expect(draft.facts.hasFeelProfile).toBe(false);
+    expect(draft.feelProfile).toBeNull();
+  });
+});

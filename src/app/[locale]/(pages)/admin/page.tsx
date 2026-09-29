@@ -3,7 +3,7 @@ import { setRequestLocale } from 'next-intl/server';
 import { getContainer } from '@/infrastructure/container';
 import { isAdmin } from '@/infrastructure/auth/admin-session';
 import { listSuggestions } from '@/application/use-cases/suggestions';
-import { listQueue } from '@/application/use-cases/requests';
+import { listQueue, weeklyRequestsByChannel } from '@/application/use-cases/requests';
 import { listSongs } from '@/application/use-cases/songs';
 import { toRequestView } from '@/lib/view-models';
 import { serverEnv } from '@/lib/env';
@@ -35,10 +35,11 @@ export default async function AdminPage({
   }
 
   const container = getContainer();
-  const [proposed, requests, summaries] = await Promise.all([
+  const [proposed, requests, summaries, channels] = await Promise.all([
     listSuggestions(container, { status: 'proposed' }),
     listQueue(container, { includeDeclined: true }),
     listSongs(container),
+    weeklyRequestsByChannel(container),
   ]);
 
   // Summaries only: the editor loads one song's body at a time, on demand, so
@@ -73,6 +74,7 @@ export default async function AdminPage({
       suggestions={suggestions}
       requests={requests.map(toRequestView)}
       songs={songs}
+      channels={channels.map((entry) => ({ ...entry }))}
     />
   );
 }

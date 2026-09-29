@@ -2,6 +2,8 @@ import { domainError, err, isErr, ok } from '@/domain/shared/result';
 import type { Result } from '@/domain/shared/result';
 import { extractLyrics } from '@/domain/lyrics/extract';
 import { assembleEngineDraft, buildEngineBrief, extractJsonObject } from '@/domain/song/engine-output';
+import { explainFlaws, gradeDraft } from '@/domain/song/draft-quality';
+import type { DraftGrade } from '@/domain/song/draft-quality';
 import { validateSongBody } from '@/domain/song/body';
 import { countLines } from '@/domain/song/song';
 import type { Song } from '@/domain/song/song';
@@ -56,6 +58,8 @@ export interface TranslateNowResult {
   /** True when the song already had a body and nothing was generated. */
   readonly existing: boolean;
   readonly unannotated: number;
+  /** How the draft scored against what the public page needs; null when served. */
+  readonly grade: DraftGrade | null;
 }
 
 export async function translateNow(
@@ -82,7 +86,7 @@ export async function translateNow(
   const already = await deps.songs.findFullBySlug(slug);
   if (already && countLines(already) > 0) {
     if (command.closeRequest) await closeRequest(deps, command.requestId, slug);
-    return ok({ song: already, existing: true, unannotated: 0 });
+    return ok({ song: already, existing: true, unannotated: 0, grade: null });
   }
 
   const allowed = await deps.rateLimiter.check(
@@ -133,6 +137,30 @@ export async function translateNow(
     return draft;
   }
 
+  // The body validator asks whether every line was translated. This asks
+  // whether what came back is a Feelyrics page: an engine that handed the
+  // source lines back is refused outright, while a thin draft publishes and
+  // says so, because the person waiting is better served by it than by an
+  // error.
+  const grade = gradeDraft(draft.value.facts);
+  if (grade.verdict === 'rejected') {
+    console.error('[translate-now] draft refused on quality', {
+      slug,
+      summary: grade.summary,
+      flaws: explainFlaws(grade),
+    });
+    return err(
+      domainError('engine_failed', `draft refused: ${explainFlaws(grade)} (${grade.summary})`),
+    );
+  }
+  if (grade.verdict === 'thin') {
+    console.warn('[translate-now] thin draft published', {
+      slug,
+      summary: grade.summary,
+      flaws: explainFlaws(grade),
+    });
+  }
+
   const validated = validateSongBody(draft.value.sections);
   if (isErr(validated)) {
     return err(domainError('engine_failed', `draft rejected: ${validated.error.detail ?? ''}`));
@@ -165,7 +193,7 @@ export async function translateNow(
   const published = await deps.songs.findFullBySlug(slug);
   if (!published) return err(domainError('not_found', 'song vanished after publish', 'slug'));
 
-  return ok({ song: published, existing: false, unannotated: draft.value.unannotated });
+  return ok({ song: published, existing: false, unannotated: draft.value.unannotated, grade });
 }
 
 /**

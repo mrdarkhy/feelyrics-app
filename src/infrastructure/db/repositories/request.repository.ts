@@ -33,6 +33,8 @@ function toDomain(row: SongRequestRow): SongRequest {
     pastedLyrics: row.pastedLyrics,
     status: row.status,
     songSlug: row.songSlug,
+    channel: row.channel,
+    readyAt: row.readyAt,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   };
@@ -94,6 +96,7 @@ export class DrizzleRequestRepository implements RequestRepository {
         lyricLineCount: input.lyricLineCount,
         pastedLyrics: input.pastedLyrics,
         status: input.status,
+        channel: input.channel,
         dedupeKey: dedupeKey(input.title, input.artist),
       })
       .returning();
@@ -113,6 +116,7 @@ export class DrizzleRequestRepository implements RequestRepository {
         pastedLyrics: request.pastedLyrics,
         requesterAlias: request.requesterAlias,
         requesterNote: request.requesterNote,
+        readyAt: request.readyAt,
         updatedAt: new Date(),
       })
       .where(eq(songRequests.id, request.id))
@@ -149,5 +153,17 @@ export class DrizzleRequestRepository implements RequestRepository {
       .from(songRequests)
       .where(gte(songRequests.createdAt, since));
     return Number(row?.value ?? 0);
+  }
+
+  async countByChannelSince(since: Date): Promise<Record<string, number>> {
+    const rows = await this.db
+      .select({ channel: songRequests.channel, value: count() })
+      .from(songRequests)
+      .where(gte(songRequests.createdAt, since))
+      .groupBy(songRequests.channel);
+
+    const tally: Record<string, number> = {};
+    for (const row of rows) tally[row.channel] = Number(row.value ?? 0);
+    return tally;
   }
 }
